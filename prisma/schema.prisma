@@ -1,0 +1,177 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// Subscription plans
+enum Plan {
+  FREE
+  CREATOR
+  PRO_BRAND
+}
+
+// Subscription status
+enum SubscriptionStatus {
+  ACTIVE
+  CANCELED
+  EXPIRED
+  PAST_DUE
+}
+
+// Generation type
+enum GenerationType {
+  TEXT
+  IMAGE
+  VIDEO
+  UPSCALE
+}
+
+// Generation status
+enum GenerationStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+// Transaction type
+enum TransactionType {
+  GENERATION
+  REFUND
+  SUBSCRIPTION
+  TOP_UP
+  MONTHLY_ALLOCATION
+}
+
+// User model
+model User {
+  id                  String           @id @default(cuid())
+  email               String           @unique
+  username            String?          @unique
+  password            String?          // Optional for OAuth users
+  emailVerified       DateTime?
+  image               String?
+  name                String?
+  plan                Plan             @default(FREE)
+  walletBalance       Int              @default(0) // Credits
+  subscriptionStatus  SubscriptionStatus?
+  subscriptionExpiry  DateTime?
+  createdAt           DateTime         @default(now())
+  updatedAt           DateTime         @updatedAt
+
+  // Relations
+  accounts            Account[]
+  sessions            Session[]
+  generations         Generation[]
+  transactions        Transaction[]
+  subscription        Subscription?
+
+  @@map("users")
+}
+
+// NextAuth.js Account model (for OAuth providers)
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+// NextAuth.js Session model
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+// NextAuth.js VerificationToken model
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+// Generation model
+model Generation {
+  id          String           @id @default(cuid())
+  userId      String
+  type        GenerationType
+  prompt      String
+  resultUrl   String?
+  cost        Int
+  status      GenerationStatus @default(PENDING)
+  isPublic    Boolean          @default(false)
+  metadata    Json?            // Additional data like image dimensions, etc.
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  // Relations
+  user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([status])
+  @@map("generations")
+}
+
+// Transaction model
+model Transaction {
+  id              String          @id @default(cuid())
+  userId          String
+  type            TransactionType
+  amount          Int             // Positive for credit, negative for debit
+  referenceJobId  String?         // Reference to generation job
+  description     String?
+  createdAt       DateTime        @default(now())
+
+  // Relations
+  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([type])
+  @@map("transactions")
+}
+
+// Subscription model
+model Subscription {
+  id                    String             @id @default(cuid())
+  userId                String             @unique
+  stripeSubscriptionId  String?            @unique
+  stripeCustomerId      String?
+  status                SubscriptionStatus @default(ACTIVE)
+  currentPeriodStart    DateTime?
+  currentPeriodEnd      DateTime?
+  cancelAtPeriodEnd     Boolean            @default(false)
+  createdAt             DateTime           @default(now())
+  updatedAt             DateTime           @updatedAt
+
+  // Relations
+  user                  User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("subscriptions")
+}

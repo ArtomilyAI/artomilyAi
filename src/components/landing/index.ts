@@ -1,0 +1,6 @@
+export { Navbar } from './navbar'
+export { HeroSection } from './hero-section'
+export { HowItWorksSection } from './how-it-works-section'
+export { TrendingTemplatesSection } from './trending-templates-section'
+export { PricingSection } from './pricing-section'
+export { Footer } from './footer'
