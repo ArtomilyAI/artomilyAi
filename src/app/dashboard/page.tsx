@@ -1,376 +1,291 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { Button } from '@/components/ui/button'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+import { useState } from 'react'
+import { ContentPromptPanel } from '@/components/dashboard/content-prompt-panel'
+import { ResultDisplay } from '@/components/dashboard/result-display'
+import { TemplateHub } from '@/components/dashboard/template-hub'
+import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Separator } from '@/components/ui/separator'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-
-interface Generation {
-  id: string
-  type: 'TEXT' | 'IMAGE' | 'VIDEO' | 'UPSCALE'
-  prompt: string
-  resultUrl: string | null
-  cost: number
-  status: 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED'
-  isPublic: boolean
-  createdAt: string
-}
-
-const CREDIT_COSTS = {
-  TEXT: 1,
-  IMAGE: 5,
-  VIDEO: 20,
-  UPSCALE: 3,
-}
+import { 
+  useTemplates, 
+  useGenerations, 
+  useUserWallet, 
+  useGenerate,
+  type Template,
+  type Generation 
+} from '@/hooks/use-queries'
 
 export default function DashboardPage() {
+  const [mode, setMode] = useState<'TEXT' | 'IMAGE' | 'VIDEO'>('IMAGE')
+  const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null)
   const [prompt, setPrompt] = useState('')
-  const [type, setType] = useState<'TEXT' | 'IMAGE'>('TEXT')
-  const [textType, setTextType] = useState<'caption' | 'script' | 'copywriting'>('caption')
-  const [imageStyle, setImageStyle] = useState<string>('')
-  const [aspectRatio, setAspectRatio] = useState<'1:1' | '16:9' | '9:16' | '4:3'>('1:1')
-  const [isGenerating, setIsGenerating] = useState(false)
-  const [result, setResult] = useState<string | null>(null)
-  const [resultType, setResultType] = useState<'text' | 'image' | null>(null)
+  
+  // Results state (not cached - UI state only)
+  const [result, setResult] = useState<{
+    image?: string | null
+    video?: string | null
+    caption?: string | null
+    hashtags?: string[]
+    generationId?: string
+  }>({})
   const [error, setError] = useState<string | null>(null)
-  const [generations, setGenerations] = useState<Generation[]>([])
-  const [loading, setLoading] = useState(true)
 
-  // Fetch generations on mount
-  useEffect(() => {
-    fetchGenerations()
-  }, [])
+  // TanStack Query hooks
+  const { data: walletData } = useUserWallet()
+  const { data: templatesData } = useTemplates({ limit: 6 })
+  const { data: generationsData } = useGenerations(6)
+  const generateMutation = useGenerate()
 
-  const fetchGenerations = async () => {
+  const credits = walletData?.balance ?? 0
+  const recentGenerations = generationsData?.generations ?? []
+  const templates = templatesData?.templates ?? []
+
+  const handleGenerate = async (data: {
+    type: 'TEXT' | 'IMAGE' | 'VIDEO'
+    prompt: string
+    textType?: 'caption' | 'script' | 'copywriting'
+    imageStyle?: string
+    aspectRatio?: string
+    duration?: number
+    referenceUrl?: string
+  }) => {
+    setError(null)
+    setResult({})
+
     try {
-      const res = await fetch('/api/generations?limit=10')
-      const data = await res.json()
-      setGenerations(data.generations || [])
+      const responseData = await generateMutation.mutateAsync(data)
+
+      // Set result based on type
+      if (data.type === 'VIDEO') {
+        setResult({
+          video: responseData.result,
+          caption: null,
+          hashtags: [],
+          generationId: responseData.generationId,
+        })
+      } else if (data.type === 'IMAGE') {
+        setResult({
+          image: responseData.result,
+          caption: null,
+          hashtags: [],
+          generationId: responseData.generationId,
+        })
+      } else {
+        const caption = responseData.result
+        const hashtags = extractHashtags(caption)
+        setResult({
+          image: null,
+          caption,
+          hashtags,
+          generationId: responseData.generationId,
+        })
+      }
+
+      // Clear template selection after successful generation
+      setPrompt('')
+      setSelectedTemplate(null)
     } catch (err) {
-      console.error('Failed to fetch generations:', err)
-    } finally {
-      setLoading(false)
+      setError(err instanceof Error ? err.message : 'Generation failed')
     }
   }
 
-  const handleGenerate = async () => {
-    if (!prompt.trim()) return
-
-    setIsGenerating(true)
-    setError(null)
-    setResult(null)
-    setResultType(null)
-
+  const handleSelectTemplate = async (template: Template) => {
+    setSelectedTemplate(template)
+    setPrompt(template.prompt)
+    setMode(template.type as 'TEXT' | 'IMAGE' | 'VIDEO')
+    
+    // Increment template usage
     try {
-      const res = await fetch('/api/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          type,
-          prompt: prompt.trim(),
-          textType: type === 'TEXT' ? textType : undefined,
-          imageStyle: type === 'IMAGE' ? imageStyle : undefined,
-          aspectRatio: type === 'IMAGE' ? aspectRatio : undefined,
-        }),
-      })
-
-      const data = await res.json()
-
-      if (!res.ok) {
-        throw new Error(data.error || 'Generation failed')
-      }
-
-      setResult(data.result || null)
-      setResultType(type === 'TEXT' ? 'text' : 'image')
-      setPrompt('')
-      // Refresh generations list
-      fetchGenerations()
+      await fetch(`/api/templates/${template.id}/use`, { method: 'POST' })
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Generation failed')
-    } finally {
-      setIsGenerating(false)
+      console.error('Failed to increment template usage:', err)
+    }
+    
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  const extractHashtags = (text: string): string[] => {
+    const matches = text.match(/#\w+/g) || []
+    return matches.map((tag) => tag.replace('#', ''))
+  }
+
+  const handleDownload = () => {
+    const url = result.image || result.video
+    if (url) {
+      window.open(url, '_blank')
     }
   }
 
   return (
-    <div className="grid gap-8 lg:grid-cols-3">
-      {/* Generation Panel */}
-      <div className="lg:col-span-2 space-y-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Generate Content</CardTitle>
-            <CardDescription>
-              Create AI-powered content with your credits
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            {/* Type Selection */}
-            <div className="space-y-2">
-              <Label>Content Type</Label>
-              <div className="flex gap-2 flex-wrap">
-                {(['TEXT', 'IMAGE'] as const).map((t) => (
-                  <Button
-                    key={t}
-                    variant={type === t ? 'default' : 'outline'}
-                    onClick={() => setType(t)}
-                    className="relative"
-                  >
-                    {t.charAt(0) + t.slice(1).toLowerCase()}
-                    <Badge variant="secondary" className="ml-2">
-                      {CREDIT_COSTS[t]} credits
-                    </Badge>
-                  </Button>
-                ))}
-              </div>
-            </div>
+    <div className="space-y-10">
+      {/* Mode Toggle */}
+      <div className="inline-flex p-1 bg-slate-200/50 dark:bg-slate-800/50 rounded-xl">
+        <button
+          className={`flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-semibold transition-all ${
+            mode === 'IMAGE'
+              ? 'bg-white dark:bg-slate-700 shadow-sm text-slate-900 dark:text-white'
+              : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'
+          }`}
+          onClick={() => setMode('IMAGE')}
+        >
+          <span>🖼️</span>
+          Photo Mode
+        </button>
+        <button
+          className={`flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-semibold transition-all ${
+            mode === 'VIDEO'
+              ? 'bg-white dark:bg-slate-700 shadow-sm text-slate-900 dark:text-white'
+              : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'
+          }`}
+          onClick={() => setMode('VIDEO')}
+        >
+          <span>🎬</span>
+          Video Mode
+        </button>
+        <button
+          className={`flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-semibold transition-all ${
+            mode === 'TEXT'
+              ? 'bg-white dark:bg-slate-700 shadow-sm text-slate-900 dark:text-white'
+              : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'
+          }`}
+          onClick={() => setMode('TEXT')}
+        >
+          <span>📝</span>
+          Text Mode
+        </button>
+      </div>
 
-            {/* Text Options */}
-            {type === 'TEXT' && (
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label>Text Style</Label>
-                  <div className="flex gap-2 flex-wrap">
-                    {(['caption', 'script', 'copywriting'] as const).map((t) => (
-                      <Button
-                        key={t}
-                        variant={textType === t ? 'default' : 'outline'}
-                        size="sm"
-                        onClick={() => setTextType(t)}
-                      >
-                        {t.charAt(0).toUpperCase() + t.slice(1)}
-                      </Button>
-                    ))}
-                  </div>
+      {/* Main Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        {/* Left: Content Prompt */}
+        <div className="lg:col-span-5 space-y-6">
+          <ContentPromptPanel
+            onGenerate={handleGenerate}
+            isGenerating={generateMutation.isPending}
+            credits={credits}
+            mode={mode}
+            selectedTemplate={selectedTemplate}
+            prompt={prompt}
+            onPromptChange={setPrompt}
+            onClearTemplate={() => {
+              setSelectedTemplate(null)
+              setPrompt('')
+            }}
+          />
+
+          {/* Quick Stats */}
+          <div className="grid grid-cols-2 gap-4">
+            <Card className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
+              <CardContent className="p-4">
+                <div className="text-2xl font-bold text-[#506ced]">{credits}</div>
+                <div className="text-sm text-slate-500">Credits Available</div>
+              </CardContent>
+            </Card>
+            <Card className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
+              <CardContent className="p-4">
+                <div className="text-2xl font-bold text-slate-900 dark:text-white">
+                  {mode === 'TEXT' ? '1' : mode === 'IMAGE' ? '5' : '20'}
                 </div>
-              </div>
-            )}
+                <div className="text-sm text-slate-500">Credits per {mode === 'TEXT' ? 'Text' : mode === 'IMAGE' ? 'Image' : 'Video'}</div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
 
-            {/* Image Options */}
-            {type === 'IMAGE' && (
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="imageStyle">Style (optional)</Label>
-                  <Input
-                    id="imageStyle"
-                    placeholder="e.g., cinematic, anime, realistic, oil painting..."
-                    value={imageStyle}
-                    onChange={(e) => setImageStyle(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Aspect Ratio</Label>
-                  <div className="flex gap-2 flex-wrap">
-                    {(['1:1', '16:9', '9:16', '4:3'] as const).map((ar) => (
-                      <Button
-                        key={ar}
-                        variant={aspectRatio === ar ? 'default' : 'outline'}
-                        size="sm"
-                        onClick={() => setAspectRatio(ar)}
-                      >
-                        {ar}
-                      </Button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
+        {/* Right: Result Display */}
+        <div className="lg:col-span-7">
+          <ResultDisplay
+            image={result.image}
+            video={result.video}
+            caption={result.caption}
+            hashtags={result.hashtags}
+            generationId={result.generationId}
+            onDownload={handleDownload}
+          />
+        </div>
+      </div>
 
-            {/* Prompt Input */}
-            <div className="space-y-2">
-              <Label htmlFor="prompt">
-                {type === 'TEXT' ? 'Your prompt' : 'Image description'}
-              </Label>
-              {type === 'TEXT' ? (
-                <textarea
-                  id="prompt"
-                  placeholder="Describe what you want to create..."
-                  value={prompt}
-                  onChange={(e) => setPrompt(e.target.value)}
-                  className="w-full min-h-[120px] p-3 rounded-md border border-input bg-background text-sm resize-none focus:outline-none focus:ring-2 focus:ring-ring"
-                />
-              ) : (
-                <Input
-                  id="prompt"
-                  placeholder="A beautiful sunset over mountains..."
-                  value={prompt}
-                  onChange={(e) => setPrompt(e.target.value)}
-                />
-              )}
-            </div>
+      {/* Template Hub */}
+      <div>
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-bold text-slate-900 dark:text-white">
+            🌟 Template Hub
+          </h2>
+          <a 
+            href="/dashboard/templates" 
+            className="text-sm text-[#506ced] hover:underline font-medium"
+          >
+            View All →
+          </a>
+        </div>
+        <TemplateHub 
+          onSelectTemplate={handleSelectTemplate} 
+          templates={templates}
+        />
+      </div>
 
-            {/* Error Message */}
-            {error && (
-              <div className="p-4 rounded-lg bg-destructive/10 text-destructive text-sm">
-                {error}
-              </div>
-            )}
-
-            {/* Result Display */}
-            {result && (
-              <div className="p-4 rounded-lg bg-muted">
-                <Label className="text-sm text-muted-foreground mb-2 block">Result:</Label>
-                {resultType === 'image' ? (
-                  <img
-                    src={result}
-                    alt="Generated"
-                    className="max-w-full rounded-lg border"
-                    style={{ maxHeight: '400px' }}
-                  />
-                ) : (
-                  <p className="whitespace-pre-wrap">{result}</p>
-                )}
-              </div>
-            )}
-
-            <Button
-              onClick={handleGenerate}
-              disabled={isGenerating || !prompt.trim()}
-              className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+      {/* Recent Generations */}
+      {recentGenerations.length > 0 && (
+        <div>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-bold text-slate-900 dark:text-white">
+              📁 Recent Generations
+            </h2>
+            <a 
+              href="/dashboard/library" 
+              className="text-sm text-[#506ced] hover:underline font-medium"
             >
-              {isGenerating ? 'Generating...' : `Generate ${type.charAt(0) + type.slice(1).toLowerCase()}`}
-            </Button>
-          </CardContent>
-        </Card>
-
-        {/* Generation History */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Your Library</CardTitle>
-            <CardDescription>View your recent generations</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {loading ? (
-              <p className="text-muted-foreground text-center py-8">Loading...</p>
-            ) : generations.length === 0 ? (
-              <p className="text-muted-foreground text-center py-8">
-                No generations yet. Create your first content above!
-              </p>
-            ) : (
-              <div className="space-y-4">
-                {generations.map((gen) => (
-                  <div
-                    key={gen.id}
-                    className="flex items-start gap-4 p-4 rounded-lg border hover:bg-muted/50 transition-colors"
-                  >
-                    {gen.type === 'IMAGE' && gen.resultUrl ? (
-                      <img
-                        src={gen.resultUrl}
-                        alt="Generated"
-                        className="w-16 h-16 rounded object-cover"
-                      />
-                    ) : (
-                      <div className="w-16 h-16 rounded bg-muted flex items-center justify-center">
-                        <span className="text-2xl">{gen.type === 'TEXT' ? '📝' : '🎬'}</span>
-                      </div>
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <Badge variant="outline">{gen.type}</Badge>
-                        <Badge
-                          variant={
-                            gen.status === 'COMPLETED'
-                              ? 'default'
-                              : gen.status === 'FAILED'
-                              ? 'destructive'
-                              : 'secondary'
-                          }
-                        >
-                          {gen.status}
-                        </Badge>
-                        <span className="text-xs text-muted-foreground ml-auto">
-                          {new Date(gen.createdAt).toLocaleDateString()}
-                        </span>
-                      </div>
-                      <p className="text-sm truncate">{gen.prompt}</p>
-                    </div>
-                    <div className="text-right">
-                      <span className="text-sm font-medium">-{gen.cost} credits</span>
-                    </div>
+              View Library →
+            </a>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            {recentGenerations.map((gen: Generation) => (
+              <div
+                key={gen.id}
+                className="group relative rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 aspect-square cursor-pointer hover:ring-2 hover:ring-[#506ced]/50 transition-all"
+              >
+                {gen.type === 'IMAGE' && gen.resultUrl ? (
+                  <img
+                    src={gen.resultUrl}
+                    alt={gen.prompt}
+                    className="w-full h-full object-cover"
+                  />
+                ) : gen.type === 'VIDEO' && gen.resultUrl ? (
+                  <video src={gen.resultUrl} className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-900">
+                    <span className="text-3xl">
+                      {gen.type === 'TEXT' ? '📝' : gen.type === 'VIDEO' ? '🎬' : '🔍'}
+                    </span>
                   </div>
-                ))}
+                )}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="absolute bottom-0 left-0 right-0 p-2">
+                    <Badge variant="secondary" className="text-xs bg-white/20 text-white border-0">
+                      {gen.type}
+                    </Badge>
+                    <p className="text-white text-xs truncate mt-1">{gen.prompt}</p>
+                  </div>
+                </div>
               </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+            ))}
+          </div>
+        </div>
+      )}
 
-      {/* Sidebar */}
-      <div className="space-y-6">
-        {/* Quick Stats */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Quick Stats</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex justify-between items-center">
-              <span className="text-muted-foreground">Current Plan</span>
-              <Badge variant="outline" className="capitalize">Free</Badge>
-            </div>
-            <Separator />
-            <div className="flex justify-between items-center">
-              <span className="text-muted-foreground">Text Cost</span>
-              <span>1 credit</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-muted-foreground">Image Cost</span>
-              <span>5 credits</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-muted-foreground">Video Cost</span>
-              <span>20 credits</span>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* AI Provider Status */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">AI Providers</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-sm">Qwen (Text)</span>
-              <Badge variant="default">Active</Badge>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm">Qwen-Image</span>
-              <Badge variant="default">Active</Badge>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm">Wan (Video)</span>
-              <Badge variant="default">Active</Badge>
-            </div>
-            <p className="text-xs text-muted-foreground mt-2">
-              Powered by Alibaba Cloud Model Studio. Add ALIBABA_DASHSCOPE_API_KEY in .env
-            </p>
-          </CardContent>
-        </Card>
-
-        {/* Upgrade Card */}
-        <Card className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 border-purple-500/20">
-          <CardHeader>
-            <CardTitle className="text-lg">Upgrade to Creator</CardTitle>
-            <CardDescription>
-              Get 300 credits/month and unlock premium features
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700">
-              Upgrade Now - $29/mo
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
+      {/* Error Toast */}
+      {error && (
+        <div className="fixed bottom-4 right-4 p-4 rounded-xl bg-red-500 text-white shadow-lg flex items-center gap-3 z-50">
+          <span>⚠️</span>
+          <span>{error}</span>
+          <button
+            onClick={() => setError(null)}
+            className="ml-2 text-white/80 hover:text-white"
+          >
+            ✕
+          </button>
+        </div>
+      )}
     </div>
   )
 }

@@ -9,67 +9,43 @@ import Link from 'next/link'
 
 gsap.registerPlugin(ScrollTrigger)
 
-const templates = [
-  {
-    title: 'Ramadan Kareem',
-    category: 'Seasonal',
-    region: 'Middle East & Asia',
-    description:
-      'Generate respectful and engaging greetings, iftar invitations, and retail promotions.',
-    type: 'Post + Story',
-    typeIcon: (
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        viewBox="0 0 24 24"
-        fill="currentColor"
-        className="size-4"
-      >
-        <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z" />
-      </svg>
-    ),
-    gradient: 'from-amber-500/20 to-orange-600/20',
-  },
-  {
-    title: 'Lunar New Year',
-    category: 'Holiday',
-    region: 'China & SE Asia',
-    description:
-      'Create vibrant red-envelope campaigns and family-oriented messaging.',
-    type: 'Video Script',
-    typeIcon: (
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        viewBox="0 0 24 24"
-        fill="currentColor"
-        className="size-4"
-      >
-        <path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z" />
-      </svg>
-    ),
-    gradient: 'from-red-500/20 to-rose-600/20',
-  },
-  {
-    title: 'Trending Memes',
-    category: 'Viral',
-    region: 'Global Internet',
-    description:
-      'Instantly capitalize on the latest viral formats with brand-safe adaptations.',
-    type: 'Image Gen',
-    typeIcon: (
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        viewBox="0 0 24 24"
-        fill="currentColor"
-        className="size-4"
-      >
-        <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34a.9959.9959 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" />
-      </svg>
-    ),
-    gradient: 'from-purple-500/20 to-pink-600/20',
-  },
-]
+// Template type from database
+interface Template {
+  id: string
+  name: string
+  description: string | null
+  prompt: string
+  type: 'TEXT' | 'IMAGE' | 'VIDEO' | 'UPSCALE'
+  category: string
+  tags: string[]
+  thumbnail: string | null
+  usageCount: number
+}
 
-export function TrendingTemplatesSection() {
+interface TrendingTemplatesSectionProps {
+  templates: Template[]
+}
+
+// Category display config
+const CATEGORY_CONFIG: Record<string, { gradient: string; icon: string }> = {
+  RAMADHAN: { gradient: 'from-amber-500/20 to-orange-600/20', icon: '🌙' },
+  CHINESE_NEW_YEAR: { gradient: 'from-red-500/20 to-rose-600/20', icon: '🧧' },
+  NATIONAL_DAY: { gradient: 'from-blue-500/20 to-indigo-600/20', icon: '🎆' },
+  TRENDING_MEME: { gradient: 'from-purple-500/20 to-pink-600/20', icon: '😂' },
+  VIRAL_TEMPLATE: { gradient: 'from-pink-500/20 to-red-600/20', icon: '🔥' },
+  BUSINESS: { gradient: 'from-slate-500/20 to-gray-600/20', icon: '💼' },
+  SOCIAL_MEDIA: { gradient: 'from-cyan-500/20 to-blue-600/20', icon: '📱' },
+  MARKETING: { gradient: 'from-green-500/20 to-emerald-600/20', icon: '📈' },
+}
+
+const TYPE_ICONS: Record<string, string> = {
+  TEXT: '📝',
+  IMAGE: '🖼️',
+  VIDEO: '🎬',
+  UPSCALE: '🔍',
+}
+
+export function TrendingTemplatesSection({ templates }: TrendingTemplatesSectionProps) {
   const sectionRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -107,6 +83,9 @@ export function TrendingTemplatesSection() {
     return () => ctx.revert()
   }, [])
 
+  // Fallback to static templates if no data
+  const displayTemplates = templates.length > 0 ? templates : getFallbackTemplates()
+
   return (
     <section
       ref={sectionRef}
@@ -119,8 +98,8 @@ export function TrendingTemplatesSection() {
             Trending Cultural Templates
           </h2>
           <Link
-            href="#"
-            className="text-primary hover:text-primary/80 font-semibold text-sm flex items-center gap-1 group"
+            href="/dashboard/templates"
+            className="text-[#506ced] hover:text-[#506ced]/80 font-semibold text-sm flex items-center gap-1 group"
           >
             View all templates
             <svg
@@ -135,65 +114,108 @@ export function TrendingTemplatesSection() {
         </div>
 
         <div className="templates-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {templates.map((template, index) => (
-            <Card
-              key={index}
-              className="template-card bg-white dark:bg-slate-800 rounded-2xl overflow-hidden border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-xl transition-all duration-300 group cursor-pointer"
-            >
-              <div
-                className={`h-48 bg-gradient-to-br ${template.gradient} relative group-hover:scale-105 transition-transform duration-500 flex items-center justify-center`}
-              >
-                <Badge
-                  variant="secondary"
-                  className="absolute top-4 left-4 bg-white/90 dark:bg-slate-900/90 backdrop-blur text-xs font-bold"
-                >
-                  {template.category}
-                </Badge>
-                <div className="size-16 rounded-full bg-white/20 flex items-center justify-center">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill="currentColor"
-                    className="size-8 text-white/80"
+          {displayTemplates.map((template, index) => {
+            const config = CATEGORY_CONFIG[template.category] || CATEGORY_CONFIG.SOCIAL_MEDIA
+            const typeIcon = TYPE_ICONS[template.type] || '📄'
+            
+            return (
+              <Link href={`/dashboard/templates?select=${template.id}`} key={template.id || index}>
+                <Card className="template-card bg-white dark:bg-slate-800 rounded-2xl overflow-hidden border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-xl transition-all duration-300 group cursor-pointer h-full">
+                  <div
+                    className={`h-48 bg-gradient-to-br ${config.gradient} relative group-hover:scale-105 transition-transform duration-500 flex items-center justify-center`}
                   >
-                    <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z" />
-                  </svg>
-                </div>
-              </div>
-
-              <CardContent className="p-6">
-                <div className="flex items-center gap-2 mb-3">
-                  <span className="text-xs font-semibold text-primary uppercase tracking-wide">
-                    {template.region}
-                  </span>
-                </div>
-                <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2 group-hover:text-primary transition-colors">
-                  {template.title}
-                </h3>
-                <p className="text-slate-500 dark:text-slate-400 text-sm mb-4">
-                  {template.description}
-                </p>
-                <div className="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-slate-700">
-                  <div className="flex items-center gap-1 text-slate-400 text-sm">
-                    {template.typeIcon}
-                    <span>{template.type}</span>
-                  </div>
-                  <span className="size-8 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-slate-600 dark:text-slate-300 group-hover:bg-primary group-hover:text-white transition-colors">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 24 24"
-                      fill="currentColor"
-                      className="size-5"
+                    <Badge
+                      variant="secondary"
+                      className="absolute top-4 left-4 bg-white/90 dark:bg-slate-900/90 backdrop-blur text-xs font-bold"
                     >
-                      <path d="M6 6v2h8.59L5 17.59 6.41 19 16 9.41V18h2V6z" />
-                    </svg>
-                  </span>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                      {formatCategory(template.category)}
+                    </Badge>
+                    <div className="size-16 rounded-full bg-white/20 flex items-center justify-center">
+                      <span className="text-4xl">{config.icon}</span>
+                    </div>
+                  </div>
+
+                  <CardContent className="p-6">
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className="text-xs font-semibold text-[#506ced] uppercase tracking-wide">
+                        {template.tags?.slice(0, 2).join(' • ') || 'General'}
+                      </span>
+                    </div>
+                    <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2 group-hover:text-[#506ced] transition-colors">
+                      {template.name}
+                    </h3>
+                    <p className="text-slate-500 dark:text-slate-400 text-sm mb-4 line-clamp-2">
+                      {template.description || template.prompt.slice(0, 80) + '...'}
+                    </p>
+                    <div className="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-slate-700">
+                      <div className="flex items-center gap-1 text-slate-400 text-sm">
+                        <span>{typeIcon}</span>
+                        <span>{template.type}</span>
+                      </div>
+                      <span className="size-8 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-slate-600 dark:text-slate-300 group-hover:bg-[#506ced] group-hover:text-white transition-colors">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          viewBox="0 0 24 24"
+                          fill="currentColor"
+                          className="size-5"
+                        >
+                          <path d="M6 6v2h8.59L5 17.59 6.41 19 16 9.41V18h2V6z" />
+                        </svg>
+                      </span>
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
+            )
+          })}
         </div>
       </div>
     </section>
   )
+}
+
+// Helper to format category enum to display text
+function formatCategory(category: string): string {
+  return category
+    .replace(/_/g, ' ')
+    .replace(/\b\w/g, (c) => c.toUpperCase())
+}
+
+// Fallback static templates if database is empty
+function getFallbackTemplates() {
+  return [
+    {
+      id: 'fallback-1',
+      name: 'Ramadan Kareem',
+      description: 'Generate respectful and engaging greetings, iftar invitations, and retail promotions.',
+      prompt: '',
+      type: 'TEXT' as const,
+      category: 'RAMADHAN',
+      tags: ['Seasonal', 'Middle East & Asia'],
+      thumbnail: null,
+      usageCount: 0,
+    },
+    {
+      id: 'fallback-2',
+      name: 'Lunar New Year',
+      description: 'Create vibrant red-envelope campaigns and family-oriented messaging.',
+      prompt: '',
+      type: 'TEXT' as const,
+      category: 'CHINESE_NEW_YEAR',
+      tags: ['Holiday', 'China & SE Asia'],
+      thumbnail: null,
+      usageCount: 0,
+    },
+    {
+      id: 'fallback-3',
+      name: 'Trending Memes',
+      description: 'Instantly capitalize on the latest viral formats with brand-safe adaptations.',
+      prompt: '',
+      type: 'IMAGE' as const,
+      category: 'TRENDING_MEME',
+      tags: ['Viral', 'Global Internet'],
+      thumbnail: null,
+      usageCount: 0,
+    },
+  ]
 }

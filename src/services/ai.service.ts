@@ -3,7 +3,7 @@ import { GenerationType, GenerationStatus } from '@prisma/client'
 
 /**
  * AI Service - Handles interactions with Alibaba Cloud Model Studio
- * Uses Qwen for text/image generation and Wan for video generation
+ * Uses Qwen for text generation and Wan for image/video generation
  * 
  * API Documentation: https://www.alibabacloud.com/help/en/model-studio/
  */
@@ -19,7 +19,7 @@ export interface ImageGenerationOptions {
   prompt: string
   style?: string
   aspectRatio?: string
-  size?: '1024x1024' | '720x1280' | '1280x720'
+  size?: string
 }
 
 export interface VideoGenerationOptions {
@@ -36,16 +36,22 @@ export interface AIResult {
 }
 
 // Alibaba Cloud Model Studio configuration
+// Using Singapore (intl) region by default
 const ALIBABA_BASE_URL = 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1'
 const ALIBABA_API_URL = 'https://dashscope-intl.aliyuncs.com/api/v1'
 
 // Model names
 const TEXT_MODEL = 'qwen-plus' // Options: qwen-turbo, qwen-plus, qwen-max
-const IMAGE_MODEL = 'wanx-v1' // Qwen-Image model
+const IMAGE_MODEL = 'wan2.6-t2i' // Wan 2.6 text-to-image
+
+// Get API key from environment
+const getApiKey = () => {
+  return process.env.ALIBABA_API_KEY || process.env.ALIBABA_DASHSCOPE_API_KEY
+}
 
 // Initialize OpenAI client for Alibaba Cloud (OpenAI-compatible mode)
 const getQwenClient = () => {
-  const apiKey = process.env.ALIBABA_DASHSCOPE_API_KEY
+  const apiKey = getApiKey()
   if (!apiKey) return null
   return new OpenAI({
     apiKey,
@@ -62,6 +68,7 @@ export class AIService {
 
     // Fallback to mock if no API key
     if (!client) {
+      console.log('No API key found, using mock for text generation')
       return this.generateTextMock(options)
     }
 
@@ -80,6 +87,8 @@ Respond with only the copywriting content.`,
 
       const tone = options.tone || 'professional'
       const language = options.language || 'English'
+
+      console.log('Calling Qwen API for text generation...')
 
       const response = await client.chat.completions.create({
         model: TEXT_MODEL,
@@ -102,6 +111,8 @@ Respond with only the copywriting content.`,
       if (!result) {
         return { success: false, error: 'No response from Qwen' }
       }
+
+      console.log('Qwen text generation successful')
 
       return {
         success: true,
@@ -141,124 +152,108 @@ Respond with only the copywriting content.`,
   }
 
   /**
-   * Generate image using Qwen-Image (Alibaba Cloud)
+   * Generate image using Wan 2.6 (Alibaba Cloud)
+   * API Reference: https://www.alibabacloud.com/help/en/model-studio/text-to-image-v2-api-reference
    */
   static async generateImage(options: ImageGenerationOptions): Promise<AIResult> {
-    const apiKey = process.env.ALIBABA_DASHSCOPE_API_KEY
+    const apiKey = getApiKey()
 
     // Fallback to mock if no API key
     if (!apiKey) {
+      console.log('No API key found, using mock for image generation')
       return this.generateImageMock(options)
     }
 
     try {
       // Build enhanced prompt with style
-      const stylePrompt = options.style ? `${options.prompt}, ${options.style} style` : options.prompt
-      
-      // Determine size based on aspect ratio
-      let size = options.size || '1024x1024'
-      if (options.aspectRatio === '16:9') size = '1280x720'
-      if (options.aspectRatio === '9:16') size = '720x1280'
+      let stylePrompt = options.prompt
+      if (options.style) {
+        stylePrompt = `${options.prompt}, ${options.style} style`
+      }
 
-      // Call Alibaba Cloud text-to-image API
-      const response = await fetch(`${ALIBABA_API_URL}/services/aigc/text2image/image-synthesis`, {
+      // Determine size based on aspect ratio
+      // Format: "width*height"
+      let size = options.size || '1280*1280'
+      if (options.aspectRatio === '16:9') size = '1696*960'
+      if (options.aspectRatio === '9:16') size = '960*1696'
+      if (options.aspectRatio === '4:3') size = '1472*1104'
+      if (options.aspectRatio === '3:4') size = '1104*1472'
+
+      console.log('Calling Wan API for image generation...')
+      console.log('Prompt:', stylePrompt)
+      console.log('Size:', size)
+
+      // Call Alibaba Cloud Wan text-to-image API (synchronous mode)
+      const response = await fetch(`${ALIBABA_API_URL}/services/aigc/multimodal-generation/generation`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${apiKey}`,
           'Content-Type': 'application/json',
-          'X-DashScope-Async': 'enable', // Enable async mode
         },
         body: JSON.stringify({
-          model: 'wanx-v1',
+          model: IMAGE_MODEL,
           input: {
-            prompt: stylePrompt,
-            negative_prompt: 'blurry, low quality, distorted, deformed, ugly, bad anatomy',
+            messages: [
+              {
+                role: 'user',
+                content: [
+                  {
+                    text: stylePrompt,
+                  },
+                ],
+              },
+            ],
           },
           parameters: {
-            size,
+            prompt_extend: true,
+            watermark: false,
             n: 1,
-            style: options.style || '<auto>',
+            negative_prompt: 'blurry, low quality, distorted, deformed, ugly, bad anatomy, oversaturated',
+            size,
           },
         }),
       })
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}))
+        const errorText = await response.text()
+        console.error('Alibaba image API error response:', errorText)
+        let errorData
+        try {
+          errorData = JSON.parse(errorText)
+        } catch {
+          errorData = { message: errorText }
+        }
         console.error('Alibaba image API error:', errorData)
         return this.generateImageMock(options)
       }
 
       const data = await response.json()
-      
-      // If async mode, we need to poll for results
-      if (data.output?.task_id) {
-        return await this.pollImageTask(data.output.task_id, apiKey)
-      }
+      console.log('Wan API response:', JSON.stringify(data, null, 2))
 
-      // Sync mode - get result directly
-      if (data.output?.results?.[0]?.url) {
+      // Extract image URL from response
+      // Response format: output.choices[0].message.content[0].image
+      const imageUrl = data.output?.choices?.[0]?.message?.content?.[0]?.image
+
+      if (imageUrl) {
+        console.log('Image generated successfully:', imageUrl.substring(0, 100) + '...')
         return {
           success: true,
-          result: data.output.results[0].url,
+          result: imageUrl,
           metadata: {
-            model: 'wanx-v1',
-            provider: 'alibaba-qwen-image',
+            model: IMAGE_MODEL,
+            provider: 'alibaba-wan',
             size,
+            requestId: data.request_id,
           },
         }
       }
 
+      console.error('No image URL in response:', data)
       return { success: false, error: 'No image generated' }
     } catch (error) {
-      console.error('Qwen image error:', error)
+      console.error('Wan image error:', error)
       return this.generateImageMock(options)
     }
-  }
-
-  /**
-   * Poll for async image generation task result
-   */
-  private static async pollImageTask(taskId: string, apiKey: string): Promise<AIResult> {
-    const maxAttempts = 60 // 5 minutes max (5s intervals)
-    
-    for (let i = 0; i < maxAttempts; i++) {
-      await this.simulateProcessing(5000)
-      
-      try {
-        const response = await fetch(`${ALIBABA_API_URL}/tasks/${taskId}`, {
-          headers: {
-            'Authorization': `Bearer ${apiKey}`,
-          },
-        })
-
-        if (!response.ok) continue
-
-        const data = await response.json()
-        const status = data.output?.task_status
-
-        if (status === 'SUCCEEDED') {
-          const imageUrl = data.output?.results?.[0]?.url
-          if (imageUrl) {
-            return {
-              success: true,
-              result: imageUrl,
-              metadata: {
-                model: 'wanx-v1',
-                provider: 'alibaba-qwen-image',
-                taskId,
-              },
-            }
-          }
-        } else if (status === 'FAILED') {
-          return { success: false, error: data.message || 'Image generation failed' }
-        }
-        // Continue polling for PENDING/RUNNING status
-      } catch (err) {
-        console.error('Poll error:', err)
-      }
-    }
-
-    return { success: false, error: 'Image generation timeout' }
   }
 
   /**
@@ -281,14 +276,17 @@ Respond with only the copywriting content.`,
    * Generate video using Wan (Alibaba Cloud)
    */
   static async generateVideo(options: VideoGenerationOptions): Promise<AIResult> {
-    const apiKey = process.env.ALIBABA_DASHSCOPE_API_KEY
+    const apiKey = getApiKey()
 
     // Fallback to mock if no API key
     if (!apiKey) {
+      console.log('No API key found, using mock for video generation')
       return this.generateVideoMock(options)
     }
 
     try {
+      console.log('Calling Wan API for video generation...')
+
       // Call Alibaba Cloud Wan video generation API
       const response = await fetch(`${ALIBABA_API_URL}/services/aigc/video-generation`, {
         method: 'POST',
@@ -395,14 +393,17 @@ Respond with only the copywriting content.`,
    * Upscale image using Alibaba Cloud
    */
   static async upscaleImage(imageUrl: string): Promise<AIResult> {
-    const apiKey = process.env.ALIBABA_DASHSCOPE_API_KEY
+    const apiKey = getApiKey()
 
     // Fallback to mock if no API key
     if (!apiKey) {
+      console.log('No API key found, using mock for upscale')
       return this.upscaleImageMock(imageUrl)
     }
 
     try {
+      console.log('Calling API for image upscale...')
+
       // Use image super-resolution API
       const response = await fetch(`${ALIBABA_API_URL}/services/aigc/image-super-resolution`, {
         method: 'POST',

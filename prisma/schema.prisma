@@ -175,3 +175,36 @@ model Subscription {
 
   @@map("subscriptions")
 }
+
+// Template category
+enum TemplateCategory {
+  RAMADHAN
+  CHINESE_NEW_YEAR
+  NATIONAL_DAY
+  TRENDING_MEME
+  VIRAL_TEMPLATE
+  BUSINESS
+  SOCIAL_MEDIA
+  MARKETING
+}
+
+// Template model for template hub
+model Template {
+  id          String           @id @default(cuid())
+  name        String
+  description String?
+  prompt      String           // The prompt template
+  type        GenerationType
+  category    TemplateCategory
+  tags        String[]         // Array of tags
+  thumbnail   String?          // Thumbnail image URL
+  isPublic    Boolean          @default(true)
+  usageCount  Int              @default(0)     // Track how many times used
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  @@index([category])
+  @@index([type])
+  @@index([isPublic])
+  @@map("templates")
+}

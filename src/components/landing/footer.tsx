@@ -12,20 +12,17 @@ const footerLinks = {
   product: [
     { label: 'Features', href: '#features' },
     { label: 'Templates', href: '#templates' },
-    { label: 'Integrations', href: '#' },
     { label: 'Pricing', href: '#pricing' },
   ],
   resources: [
     { label: 'Blog', href: '#' },
-    { label: 'Community', href: '#' },
     { label: 'Help Center', href: '#' },
     { label: 'API Docs', href: '#' },
   ],
   company: [
     { label: 'About Us', href: '#' },
-    { label: 'Careers', href: '#' },
-    { label: 'Legal', href: '#' },
     { label: 'Contact', href: '#' },
+    { label: 'Legal', href: '#' },
   ],
 }
 
@@ -61,21 +58,14 @@ export function Footer() {
       <div className="mx-auto max-w-7xl px-4">
         <div className="footer-content grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-8 mb-12">
           <div className="col-span-2 lg:col-span-2">
-            <div className="flex items-center gap-2 mb-4">
-              <div className="flex items-center justify-center size-6 rounded bg-primary text-white">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  fill="currentColor"
-                  className="size-4"
-                >
-                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z" />
-                </svg>
+            <Link href="/" className="flex items-center gap-2 mb-4">
+              <div className="flex items-center justify-center size-8 rounded-lg bg-[#506ced] text-white">
+                <span className="text-base">✨</span>
               </div>
               <h2 className="text-slate-900 dark:text-white text-lg font-bold">
                 ArtomilyAI
               </h2>
-            </div>
+            </Link>
             <p className="text-slate-500 dark:text-slate-400 text-sm mb-6 max-w-xs">
               Empowering creators to tell stories that matter, anywhere in the
               world.
@@ -83,7 +73,7 @@ export function Footer() {
             <div className="flex gap-4">
               <Link
                 href="#"
-                className="text-slate-400 hover:text-primary transition-colors"
+                className="text-slate-400 hover:text-[#506ced] transition-colors"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -96,7 +86,7 @@ export function Footer() {
               </Link>
               <Link
                 href="#"
-                className="text-slate-400 hover:text-primary transition-colors"
+                className="text-slate-400 hover:text-[#506ced] transition-colors"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -109,7 +99,7 @@ export function Footer() {
               </Link>
               <Link
                 href="#"
-                className="text-slate-400 hover:text-primary transition-colors"
+                className="text-slate-400 hover:text-[#506ced] transition-colors"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -130,7 +120,7 @@ export function Footer() {
             <ul className="space-y-2 text-sm text-slate-600 dark:text-slate-400">
               {footerLinks.product.map((link, index) => (
                 <li key={index}>
-                  <Link href={link.href} className="hover:text-primary">
+                  <Link href={link.href} className="hover:text-[#506ced]">
                     {link.label}
                   </Link>
                 </li>
@@ -145,7 +135,7 @@ export function Footer() {
             <ul className="space-y-2 text-sm text-slate-600 dark:text-slate-400">
               {footerLinks.resources.map((link, index) => (
                 <li key={index}>
-                  <Link href={link.href} className="hover:text-primary">
+                  <Link href={link.href} className="hover:text-[#506ced]">
                     {link.label}
                   </Link>
                 </li>
@@ -160,7 +150,7 @@ export function Footer() {
             <ul className="space-y-2 text-sm text-slate-600 dark:text-slate-400">
               {footerLinks.company.map((link, index) => (
                 <li key={index}>
-                  <Link href={link.href} className="hover:text-primary">
+                  <Link href={link.href} className="hover:text-[#506ced]">
                     {link.label}
                   </Link>
                 </li>
@@ -173,7 +163,7 @@ export function Footer() {
 
         <div className="flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-slate-500 dark:text-slate-500 text-sm">
-            © 2024 ArtomilyAI. All rights reserved.
+            © 2025 ArtomilyAI. All rights reserved.
           </p>
           <div className="flex gap-6 text-sm text-slate-500 dark:text-slate-500">
             <Link href="#" className="hover:text-slate-900 dark:hover:text-slate-300">

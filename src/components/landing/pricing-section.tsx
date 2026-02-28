@@ -6,6 +6,7 @@ import ScrollTrigger from 'gsap/ScrollTrigger'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import Link from 'next/link'
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -22,6 +23,7 @@ const plans = [
     ],
     buttonText: 'Get Started Free',
     buttonVariant: 'outline' as const,
+    buttonHref: '/auth/register',
     popular: false,
   },
   {
@@ -37,6 +39,7 @@ const plans = [
     ],
     buttonText: 'Upgrade to Pro',
     buttonVariant: 'default' as const,
+    buttonHref: '/auth/register?plan=pro',
     popular: true,
   },
 ]
@@ -106,7 +109,7 @@ export function PricingSection() {
               }`}
             >
               {plan.popular && (
-                <div className="absolute top-0 right-0 w-64 h-64 bg-primary/20 blur-[80px] rounded-full pointer-events-none -mr-16 -mt-16" />
+                <div className="absolute top-0 right-0 w-64 h-64 bg-[#506ced]/20 blur-[80px] rounded-full pointer-events-none -mr-16 -mt-16" />
               )}
               <CardContent className="p-8 flex flex-col h-full relative z-10">
                 <div className="flex justify-between items-start mb-2">
@@ -118,7 +121,7 @@ export function PricingSection() {
                     {plan.name}
                   </h3>
                   {plan.popular && (
-                    <Badge className="bg-primary text-white text-xs font-bold">
+                    <Badge className="bg-[#506ced] text-white text-xs font-bold">
                       Most Popular
                     </Badge>
                   )}
@@ -164,7 +167,7 @@ export function PricingSection() {
                         viewBox="0 0 24 24"
                         fill="currentColor"
                         className={`size-5 ${
-                          plan.popular ? 'text-primary' : 'text-green-500'
+                          plan.popular ? 'text-[#506ced]' : 'text-green-500'
                         }`}
                       >
                         <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
@@ -174,16 +177,18 @@ export function PricingSection() {
                   ))}
                 </ul>
 
-                <Button
-                  variant={plan.popular ? 'default' : 'outline'}
-                  className={`w-full py-3 ${
-                    plan.popular
-                      ? 'shadow-lg shadow-primary/25'
-                      : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700'
-                  }`}
-                >
-                  {plan.buttonText}
-                </Button>
+                <Link href={plan.buttonHref} className="w-full">
+                  <Button
+                    variant={plan.popular ? 'default' : 'outline'}
+                    className={`w-full py-3 ${
+                      plan.popular
+                        ? 'shadow-lg shadow-[#506ced]/25 bg-[#506ced] hover:bg-[#506ced]/90'
+                        : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700'
+                    }`}
+                  >
+                    {plan.buttonText}
+                  </Button>
+                </Link>
               </CardContent>
             </Card>
           ))}
