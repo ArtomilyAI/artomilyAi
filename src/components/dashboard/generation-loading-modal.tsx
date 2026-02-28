@@ -2,11 +2,14 @@
 
 import { useState, useEffect } from 'react'
 import { Dialog, DialogContent } from '@/components/ui/dialog'
+import { Check, Clock, Play, Image, Video, FileText, Sparkles, Trophy, PartyPopper, Timer } from 'lucide-react'
 
 interface GenerationLoadingModalProps {
   isOpen: boolean
   mode: 'TEXT' | 'IMAGE' | 'VIDEO'
   hasReference: boolean
+  isComplete?: boolean
+  onComplete?: () => void
 }
 
 interface Step {
@@ -16,10 +19,11 @@ interface Step {
   status: 'pending' | 'active' | 'completed'
 }
 
-export function GenerationLoadingModal({ isOpen, mode, hasReference }: GenerationLoadingModalProps) {
+export function GenerationLoadingModal({ isOpen, mode, hasReference, isComplete = false, onComplete }: GenerationLoadingModalProps) {
   const [currentStep, setCurrentStep] = useState(0)
   const [progress, setProgress] = useState(0)
   const [elapsedTime, setElapsedTime] = useState(0)
+  const [showCompletion, setShowCompletion] = useState(false)
 
   // Define steps based on mode
   const getSteps = (): Step[] => {
@@ -55,6 +59,7 @@ export function GenerationLoadingModal({ isOpen, mode, hasReference }: Generatio
       setCurrentStep(0)
       setProgress(0)
       setElapsedTime(0)
+      setShowCompletion(false)
       return
     }
 
@@ -84,6 +89,31 @@ export function GenerationLoadingModal({ isOpen, mode, hasReference }: Generatio
     return () => clearInterval(interval)
   }, [isOpen, currentStep, steps.length])
 
+  // Handle completion state
+  useEffect(() => {
+    if (isComplete && isOpen) {
+      // Set progress to 100%
+      setProgress(100)
+      
+      // Show completion state after a short delay
+      const timer = setTimeout(() => {
+        setShowCompletion(true)
+      }, 500)
+
+      // Close modal after showing completion
+      const closeTimer = setTimeout(() => {
+        if (onComplete) {
+          onComplete()
+        }
+      }, 2000)
+
+      return () => {
+        clearTimeout(timer)
+        clearTimeout(closeTimer)
+      }
+    }
+  }, [isComplete, isOpen, onComplete])
+
   // Move to next step periodically (for demo - in real app, this is controlled by API)
   const advanceStep = () => {
     setCurrentStep(prev => Math.min(prev + 1, steps.length - 1))
@@ -112,9 +142,9 @@ export function GenerationLoadingModal({ isOpen, mode, hasReference }: Generatio
   }
 
   const getModeIcon = () => {
-    if (mode === 'IMAGE') return '🖼️'
-    if (mode === 'VIDEO') return '🎬'
-    return '📝'
+    if (mode === 'IMAGE') return <Image className="size-6" />
+    if (mode === 'VIDEO') return <Video className="size-6" />
+    return <FileText className="size-6" />
   }
 
   const getModeTitle = () => {
@@ -130,10 +160,18 @@ export function GenerationLoadingModal({ isOpen, mode, hasReference }: Generatio
           {/* Header */}
           <div className="text-center mb-6">
             <div className="inline-flex items-center justify-center size-16 rounded-full bg-white/20 mb-4 animate-pulse">
-              <span className="text-3xl">{getModeIcon()}</span>
+              {showCompletion ? (
+                <Trophy className="size-8 text-white" />
+              ) : (
+                getModeIcon()
+              )}
             </div>
-            <h2 className="text-xl font-bold text-white mb-1">{getModeTitle()}</h2>
-            <p className="text-white/70 text-sm">Estimated time: {getEstimatedTime()}</p>
+            <h2 className="text-xl font-bold text-white mb-1">
+              {showCompletion ? 'Generation Complete!' : getModeTitle()}
+            </h2>
+            <p className="text-white/70 text-sm">
+              {showCompletion ? 'Ready to view your content' : `Estimated time: ${getEstimatedTime()}`}
+            </p>
           </div>
 
           {/* Progress Bar */}
@@ -151,61 +189,76 @@ export function GenerationLoadingModal({ isOpen, mode, hasReference }: Generatio
           </div>
 
           {/* Steps */}
-          <div className="space-y-3">
-            {steps.map((step, index) => (
-              <div
-                key={step.id}
-                className={`flex items-center gap-3 p-3 rounded-xl transition-all duration-300 ${
-                  index < currentStep
-                    ? 'bg-white/20'
-                    : index === currentStep
-                    ? 'bg-white/30 ring-2 ring-white/50'
-                    : 'bg-white/5'
-                }`}
-              >
-                <div className={`size-8 rounded-full flex items-center justify-center ${
-                  index < currentStep
-                    ? 'bg-green-400 text-white'
-                    : index === currentStep
-                    ? 'bg-white text-[#506ced] animate-pulse'
-                    : 'bg-white/20 text-white/50'
-                }`}>
-                  {index < currentStep ? (
-                    <span className="text-sm">✓</span>
-                  ) : index === currentStep ? (
-                    <div className="size-4 border-2 border-[#506ced] border-t-transparent rounded-full animate-spin" />
-                  ) : (
-                    <span className="text-xs">{index + 1}</span>
+          {!showCompletion && (
+            <div className="space-y-3">
+              {steps.map((step, index) => (
+                <div
+                  key={step.id}
+                  className={`flex items-center gap-3 p-3 rounded-xl transition-all duration-300 ${
+                    index < currentStep
+                      ? 'bg-white/20'
+                      : index === currentStep
+                      ? 'bg-white/30 ring-2 ring-white/50'
+                      : 'bg-white/5'
+                  }`}
+                >
+                  <div className={`size-8 rounded-full flex items-center justify-center ${
+                    index < currentStep
+                      ? 'bg-green-400 text-white'
+                      : index === currentStep
+                      ? 'bg-white text-[#506ced] animate-pulse'
+                      : 'bg-white/20 text-white/50'
+                  }`}>
+                    {index < currentStep ? (
+                      <Check className="size-4" />
+                    ) : index === currentStep ? (
+                      <div className="size-4 border-2 border-[#506ced] border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <span className="text-xs">{index + 1}</span>
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className={`text-sm font-semibold ${
+                      index <= currentStep ? 'text-white' : 'text-white/50'
+                    }`}>
+                      {step.label}
+                    </p>
+                    <p className={`text-xs truncate ${
+                      index === currentStep ? 'text-white/80' : 'text-white/40'
+                    }`}>
+                      {step.description}
+                    </p>
+                  </div>
+                  {index === currentStep && (
+                    <div className="flex items-center gap-1 text-white/60">
+                      <Timer className="size-3" />
+                      <span className="text-xs font-mono">{formatTime(elapsedTime)}</span>
+                    </div>
                   )}
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className={`text-sm font-semibold ${
-                    index <= currentStep ? 'text-white' : 'text-white/50'
-                  }`}>
-                    {step.label}
-                  </p>
-                  <p className={`text-xs truncate ${
-                    index === currentStep ? 'text-white/80' : 'text-white/40'
-                  }`}>
-                    {step.description}
-                  </p>
-                </div>
-                {index === currentStep && (
-                  <div className="flex items-center gap-1 text-white/60">
-                    <span className="text-xs">⏱</span>
-                    <span className="text-xs font-mono">{formatTime(elapsedTime)}</span>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
 
-          {/* Tips */}
-          <div className="mt-6 p-3 bg-white/10 rounded-xl">
-            <p className="text-xs text-white/70 text-center">
-              💡 <span className="text-white/90">Tip:</span> {getTip(mode)}
-            </p>
-          </div>
+          {/* Completion Message */}
+          {showCompletion && (
+            <div className="flex flex-col items-center justify-center py-6">
+              <div className="size-16 rounded-full bg-green-400/20 flex items-center justify-center mb-4">
+                <PartyPopper className="size-8 text-white" />
+              </div>
+              <p className="text-white text-center mb-2">Your content has been generated successfully!</p>
+              <p className="text-white/70 text-sm text-center">Preparing to show your results...</p>
+            </div>
+          )}
+
+          {/* Tips - only show when not in completion state */}
+          {!showCompletion && (
+            <div className="mt-6 p-3 bg-white/10 rounded-xl">
+              <p className="text-xs text-white/70 text-center flex items-center justify-center gap-1">
+                <Sparkles className="size-3" /> <span className="text-white/90">Tip:</span> {getTip(mode)}
+              </p>
+            </div>
+          )}
         </div>
       </DialogContent>
     </Dialog>

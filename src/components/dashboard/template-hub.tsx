@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { useTemplates, useTemplateUsage, type Template } from '@/hooks/use-queries'
+import { Flame, Moon, DollarSign, Building, Share2, Megaphone, Star } from 'lucide-react'
 
 interface TemplateHubProps {
   onSelectTemplate: (template: Template) => void
@@ -12,13 +13,13 @@ interface TemplateHubProps {
 }
 
 const CATEGORIES = [
-  { value: 'all', label: 'All', icon: '🌟' },
-  { value: 'TRENDING_MEME', label: 'Trending', icon: '🔥' },
-  { value: 'RAMADHAN', label: 'Ramadhan', icon: '🌙' },
-  { value: 'CHINESE_NEW_YEAR', label: 'CNY', icon: '🧧' },
-  { value: 'BUSINESS', label: 'Business', icon: '💼' },
-  { value: 'SOCIAL_MEDIA', label: 'Social', icon: '📱' },
-  { value: 'MARKETING', label: 'Marketing', icon: '📈' },
+  { value: 'all', label: 'All', icon: <Star className="size-4" /> },
+  { value: 'TRENDING_MEME', label: 'Trending', icon: <Flame className="size-4" /> },
+  { value: 'RAMADHAN', label: 'Ramadhan', icon: <Moon className="size-4" /> },
+  { value: 'CHINESE_NEW_YEAR', label: 'CNY', icon: <DollarSign className="size-4" /> },
+  { value: 'BUSINESS', label: 'Business', icon: <Building className="size-4" /> },
+  { value: 'SOCIAL_MEDIA', label: 'Social', icon: <Share2 className="size-4" /> },
+  { value: 'MARKETING', label: 'Marketing', icon: <Megaphone className="size-4" /> },
 ] as const
 
 export function TemplateHub({ onSelectTemplate, templates: externalTemplates }: TemplateHubProps) {

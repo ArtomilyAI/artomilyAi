@@ -31,6 +31,7 @@ export default function DashboardPage() {
   const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null)
   const [prompt, setPrompt] = useState('')
   const [referenceUrl, setReferenceUrl] = useState<string | null>(null)
+  const [isModalComplete, setIsModalComplete] = useState(false)
   
   // Results state (not cached - UI state only)
   const [result, setResult] = useState<{
@@ -102,6 +103,7 @@ export default function DashboardPage() {
     setError(null)
     setResult({})
     setIsGenerating(true)
+    setIsModalComplete(false) // Reset modal completion state
     setReferenceUrl(data.referenceUrl || null)
     generationTypeRef.current = data.type
 
@@ -169,6 +171,10 @@ export default function DashboardPage() {
       setError(err instanceof Error ? err.message : 'Generation failed')
     } finally {
       setIsGenerating(false)
+      // Set modal completion after a short delay to allow all steps to finish
+      setTimeout(() => {
+        setIsModalComplete(true)
+      }, 1000)
     }
   }
 
@@ -199,6 +205,10 @@ export default function DashboardPage() {
     }
   }
 
+  const handleModalComplete = () => {
+    setIsModalComplete(false) // Reset completion state
+  }
+
   return (
     <div className="space-y-10">
       {/* Generation Loading Modal */}
@@ -206,6 +216,8 @@ export default function DashboardPage() {
         isOpen={isGenerating} 
         mode={generationTypeRef.current}
         hasReference={!!referenceUrl}
+        isComplete={isModalComplete}
+        onComplete={handleModalComplete}
       />
 
       {/* Mode Toggle */}
@@ -264,7 +276,7 @@ export default function DashboardPage() {
           />
 
           {/* Quick Stats */}
-          <div className="grid grid-cols-2 gap-4">
+          {/* <div className="grid grid-cols-2 gap-4">
             <Card className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
               <CardContent className="p-4 flex items-center gap-3">
                 <div className="size-10 rounded-full bg-[#506ced]/10 flex items-center justify-center">
@@ -295,7 +307,7 @@ export default function DashboardPage() {
                 </div>
               </CardContent>
             </Card>
-          </div>
+          </div> */}
         </div>
 
         {/* Right: Result Display */}
