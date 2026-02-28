@@ -1,11 +1,22 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { ContentPromptPanel } from '@/components/dashboard/content-prompt-panel'
 import { ResultDisplay } from '@/components/dashboard/result-display'
 import { TemplateHub } from '@/components/dashboard/template-hub'
+import { GenerationLoadingModal, advanceGenerationStep } from '@/components/dashboard/generation-loading-modal'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { 
+  Image, 
+  Video, 
+  FileText,
+  Zap,
+  Star,
+  FolderOpen,
+  AlertTriangle,
+  X
+} from 'lucide-react'
 import { 
   useTemplates, 
   useGenerations, 
@@ -19,6 +30,7 @@ export default function DashboardPage() {
   const [mode, setMode] = useState<'TEXT' | 'IMAGE' | 'VIDEO'>('IMAGE')
   const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null)
   const [prompt, setPrompt] = useState('')
+  const [referenceUrl, setReferenceUrl] = useState<string | null>(null)
   
   // Results state (not cached - UI state only)
   const [result, setResult] = useState<{
@@ -29,6 +41,8 @@ export default function DashboardPage() {
     generationId?: string
   }>({})
   const [error, setError] = useState<string | null>(null)
+  const [isGenerating, setIsGenerating] = useState(false)
+  const generationTypeRef = useRef<'TEXT' | 'IMAGE' | 'VIDEO'>('IMAGE')
 
   // TanStack Query hooks
   const { data: walletData } = useUserWallet()
@@ -40,6 +54,41 @@ export default function DashboardPage() {
   const recentGenerations = generationsData?.generations ?? []
   const templates = templatesData?.templates ?? []
 
+  // Generate caption for image/video
+  const generateCaptionAndHashtags = async (imageUrl: string, type: 'IMAGE' | 'VIDEO') => {
+    try {
+      advanceGenerationStep() // Move to caption step
+      
+      const captionPrompt = type === 'IMAGE' 
+        ? 'Write an engaging social media caption for this image. Include relevant hashtags at the end.'
+        : 'Write an engaging social media caption for this video. Include relevant hashtags at the end.'
+      
+      const captionResponse = await fetch('/api/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'TEXT',
+          prompt: captionPrompt,
+          textType: 'caption',
+        }),
+      })
+      
+      if (captionResponse.ok) {
+        const captionData = await captionResponse.json()
+        advanceGenerationStep() // Move to hashtags step
+        
+        return {
+          caption: captionData.result,
+          hashtags: extractHashtags(captionData.result),
+        }
+      }
+    } catch (err) {
+      console.error('Failed to generate caption:', err)
+    }
+    
+    return { caption: null, hashtags: [] }
+  }
+
   const handleGenerate = async (data: {
     type: 'TEXT' | 'IMAGE' | 'VIDEO'
     prompt: string
@@ -48,28 +97,60 @@ export default function DashboardPage() {
     aspectRatio?: string
     duration?: number
     referenceUrl?: string
+    generateMetadata?: boolean
   }) => {
     setError(null)
     setResult({})
+    setIsGenerating(true)
+    setReferenceUrl(data.referenceUrl || null)
+    generationTypeRef.current = data.type
 
     try {
+      advanceGenerationStep() // Start first step
       const responseData = await generateMutation.mutateAsync(data)
+      advanceGenerationStep() // Move to next step
 
       // Set result based on type
       if (data.type === 'VIDEO') {
-        setResult({
-          video: responseData.result,
-          caption: null,
-          hashtags: [],
-          generationId: responseData.generationId,
-        })
+        const videoResult = responseData.result
+        
+        // Generate caption and hashtags for video only if toggle is on
+        if (data.generateMetadata) {
+          const { caption, hashtags } = await generateCaptionAndHashtags(videoResult, 'VIDEO')
+          setResult({
+            video: videoResult,
+            caption,
+            hashtags,
+            generationId: responseData.generationId,
+          })
+        } else {
+          setResult({
+            video: videoResult,
+            caption: null,
+            hashtags: [],
+            generationId: responseData.generationId,
+          })
+        }
       } else if (data.type === 'IMAGE') {
-        setResult({
-          image: responseData.result,
-          caption: null,
-          hashtags: [],
-          generationId: responseData.generationId,
-        })
+        const imageResult = responseData.result
+        
+        // Generate caption and hashtags for image only if toggle is on
+        if (data.generateMetadata) {
+          const { caption, hashtags } = await generateCaptionAndHashtags(imageResult, 'IMAGE')
+          setResult({
+            image: imageResult,
+            caption,
+            hashtags,
+            generationId: responseData.generationId,
+          })
+        } else {
+          setResult({
+            image: imageResult,
+            caption: null,
+            hashtags: [],
+            generationId: responseData.generationId,
+          })
+        }
       } else {
         const caption = responseData.result
         const hashtags = extractHashtags(caption)
@@ -86,6 +167,8 @@ export default function DashboardPage() {
       setSelectedTemplate(null)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Generation failed')
+    } finally {
+      setIsGenerating(false)
     }
   }
 
@@ -118,6 +201,13 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-10">
+      {/* Generation Loading Modal */}
+      <GenerationLoadingModal 
+        isOpen={isGenerating} 
+        mode={generationTypeRef.current}
+        hasReference={!!referenceUrl}
+      />
+
       {/* Mode Toggle */}
       <div className="inline-flex p-1 bg-slate-200/50 dark:bg-slate-800/50 rounded-xl">
         <button
@@ -128,7 +218,7 @@ export default function DashboardPage() {
           }`}
           onClick={() => setMode('IMAGE')}
         >
-          <span>🖼️</span>
+          <Image className="size-4" />
           Photo Mode
         </button>
         <button
@@ -139,7 +229,7 @@ export default function DashboardPage() {
           }`}
           onClick={() => setMode('VIDEO')}
         >
-          <span>🎬</span>
+          <Video className="size-4" />
           Video Mode
         </button>
         <button
@@ -150,7 +240,7 @@ export default function DashboardPage() {
           }`}
           onClick={() => setMode('TEXT')}
         >
-          <span>📝</span>
+          <FileText className="size-4" />
           Text Mode
         </button>
       </div>
@@ -161,7 +251,7 @@ export default function DashboardPage() {
         <div className="lg:col-span-5 space-y-6">
           <ContentPromptPanel
             onGenerate={handleGenerate}
-            isGenerating={generateMutation.isPending}
+            isGenerating={isGenerating}
             credits={credits}
             mode={mode}
             selectedTemplate={selectedTemplate}
@@ -176,17 +266,33 @@ export default function DashboardPage() {
           {/* Quick Stats */}
           <div className="grid grid-cols-2 gap-4">
             <Card className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
-              <CardContent className="p-4">
-                <div className="text-2xl font-bold text-[#506ced]">{credits}</div>
-                <div className="text-sm text-slate-500">Credits Available</div>
+              <CardContent className="p-4 flex items-center gap-3">
+                <div className="size-10 rounded-full bg-[#506ced]/10 flex items-center justify-center">
+                  <Zap className="size-5 text-[#506ced]" />
+                </div>
+                <div>
+                  <div className="text-2xl font-bold text-[#506ced]">{credits}</div>
+                  <div className="text-sm text-slate-500">Credits Available</div>
+                </div>
               </CardContent>
             </Card>
             <Card className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
-              <CardContent className="p-4">
-                <div className="text-2xl font-bold text-slate-900 dark:text-white">
-                  {mode === 'TEXT' ? '1' : mode === 'IMAGE' ? '5' : '20'}
+              <CardContent className="p-4 flex items-center gap-3">
+                <div className="size-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+                  {mode === 'IMAGE' ? (
+                    <Image className="size-5 text-slate-600 dark:text-slate-400" />
+                  ) : mode === 'VIDEO' ? (
+                    <Video className="size-5 text-slate-600 dark:text-slate-400" />
+                  ) : (
+                    <FileText className="size-5 text-slate-600 dark:text-slate-400" />
+                  )}
                 </div>
-                <div className="text-sm text-slate-500">Credits per {mode === 'TEXT' ? 'Text' : mode === 'IMAGE' ? 'Image' : 'Video'}</div>
+                <div>
+                  <div className="text-2xl font-bold text-slate-900 dark:text-white">
+                    {mode === 'TEXT' ? '1' : mode === 'IMAGE' ? '5' : '20'}
+                  </div>
+                  <div className="text-sm text-slate-500">Credits per {mode === 'TEXT' ? 'Text' : mode === 'IMAGE' ? 'Image' : 'Video'}</div>
+                </div>
               </CardContent>
             </Card>
           </div>
@@ -201,6 +307,8 @@ export default function DashboardPage() {
             hashtags={result.hashtags}
             generationId={result.generationId}
             onDownload={handleDownload}
+            isLoading={isGenerating}
+            loadingMode={generationTypeRef.current}
           />
         </div>
       </div>
@@ -208,8 +316,9 @@ export default function DashboardPage() {
       {/* Template Hub */}
       <div>
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-bold text-slate-900 dark:text-white">
-            🌟 Template Hub
+          <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <Star className="size-5 text-[#506ced]" />
+            Template Hub
           </h2>
           <a 
             href="/dashboard/templates" 
@@ -228,8 +337,9 @@ export default function DashboardPage() {
       {recentGenerations.length > 0 && (
         <div>
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-bold text-slate-900 dark:text-white">
-              📁 Recent Generations
+            <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <FolderOpen className="size-5 text-[#506ced]" />
+              Recent Generations
             </h2>
             <a 
               href="/dashboard/library" 
@@ -254,9 +364,13 @@ export default function DashboardPage() {
                   <video src={gen.resultUrl} className="w-full h-full object-cover" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-900">
-                    <span className="text-3xl">
-                      {gen.type === 'TEXT' ? '📝' : gen.type === 'VIDEO' ? '🎬' : '🔍'}
-                    </span>
+                    {gen.type === 'TEXT' ? (
+                      <FileText className="size-8 text-slate-400" />
+                    ) : gen.type === 'VIDEO' ? (
+                      <Video className="size-8 text-slate-400" />
+                    ) : (
+                      <Image className="size-8 text-slate-400" />
+                    )}
                   </div>
                 )}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
@@ -276,13 +390,13 @@ export default function DashboardPage() {
       {/* Error Toast */}
       {error && (
         <div className="fixed bottom-4 right-4 p-4 rounded-xl bg-red-500 text-white shadow-lg flex items-center gap-3 z-50">
-          <span>⚠️</span>
+          <AlertTriangle className="size-5" />
           <span>{error}</span>
           <button
             onClick={() => setError(null)}
             className="ml-2 text-white/80 hover:text-white"
           >
-            ✕
+            <X className="size-4" />
           </button>
         </div>
       )}

@@ -6,6 +6,20 @@ import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Switch } from '@/components/ui/switch'
+import { 
+  Image, 
+  Video, 
+  FileText, 
+  Sparkles, 
+  Upload, 
+  X, 
+  Clock,
+  Zap,
+  Type,
+  FileEdit,
+  PenTool
+} from 'lucide-react'
 import type { Template } from '@/hooks/use-queries'
 
 interface ContentPromptPanelProps {
@@ -17,6 +31,7 @@ interface ContentPromptPanelProps {
     aspectRatio?: string
     duration?: number
     referenceUrl?: string
+    generateMetadata?: boolean
   }) => Promise<void>
   isGenerating: boolean
   credits: number
@@ -55,6 +70,7 @@ const CREDIT_COSTS = {
   TEXT: 1,
   IMAGE: 5,
   VIDEO: 20,
+  METADATA: 1, // Caption + Hashtags generation
 }
 
 export function ContentPromptPanel({ 
@@ -75,6 +91,7 @@ export function ContentPromptPanel({
   const [duration, setDuration] = useState(5)
   const [referenceFile, setReferenceFile] = useState<File | null>(null)
   const [referencePreview, setReferencePreview] = useState<string | null>(null)
+  const [generateMetadata, setGenerateMetadata] = useState(true) // Toggle for caption/hashtags
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Use external values if provided, otherwise use internal state
@@ -122,31 +139,33 @@ export function ContentPromptPanel({
       aspectRatio: mode === 'IMAGE' || mode === 'VIDEO' ? aspectRatio : undefined,
       duration: mode === 'VIDEO' ? duration : undefined,
       referenceUrl: referencePreview || undefined,
+      generateMetadata: mode !== 'TEXT' ? generateMetadata : false,
     })
   }
 
-  const creditCost = CREDIT_COSTS[mode]
+  const creditCost = CREDIT_COSTS[mode] + (mode !== 'TEXT' && generateMetadata ? CREDIT_COSTS.METADATA : 0)
 
   return (
     <Card className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 shadow-sm">
       <CardHeader className="pb-4">
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2 text-slate-900 dark:text-white">
-            <span className="text-[#506ced]">✏️</span>
+            <PenTool className="size-5 text-[#506ced]" />
             Content Prompt
           </CardTitle>
           {/* Selected Template Badge */}
           {selectedTemplate && (
             <div className="flex items-center gap-2">
-              <Badge variant="secondary" className="bg-[#506ced]/10 text-[#506ced] border-[#506ced]/20">
-                📋 {selectedTemplate.name}
+              <Badge variant="secondary" className="bg-[#506ced]/10 text-[#506ced] border-[#506ced]/20 flex items-center gap-1">
+                <FileEdit className="size-3" />
+                {selectedTemplate.name}
               </Badge>
               {onClearTemplate && (
                 <button
                   onClick={onClearTemplate}
                   className="text-slate-400 hover:text-slate-600 text-sm"
                 >
-                  ✕
+                  <X className="size-4" />
                 </button>
               )}
             </div>
@@ -165,7 +184,7 @@ export function ContentPromptPanel({
               }`}
               onClick={() => setInternalMode('IMAGE')}
             >
-              <span>🖼️</span>
+              <Image className="size-4" />
               Photo
             </button>
             <button
@@ -176,7 +195,7 @@ export function ContentPromptPanel({
               }`}
               onClick={() => setInternalMode('VIDEO')}
             >
-              <span>🎬</span>
+              <Video className="size-4" />
               Video
             </button>
             <button
@@ -187,7 +206,7 @@ export function ContentPromptPanel({
               }`}
               onClick={() => setInternalMode('TEXT')}
             >
-              <span>📝</span>
+              <FileText className="size-4" />
               Text
             </button>
           </div>
@@ -227,7 +246,7 @@ export function ContentPromptPanel({
                   onClick={clearReference}
                   className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
                 >
-                  ✕
+                  <X className="size-4" />
                 </button>
               </div>
             ) : (
@@ -236,7 +255,7 @@ export function ContentPromptPanel({
                 onClick={() => fileInputRef.current?.click()}
               >
                 <div className="size-12 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center mb-3 text-slate-500 dark:text-slate-400">
-                  <span className="text-2xl">🖼️</span>
+                  <Upload className="size-6" />
                 </div>
                 <p className="text-sm text-slate-600 dark:text-slate-400 font-medium">
                   Click or drag to upload reference image
@@ -252,6 +271,25 @@ export function ContentPromptPanel({
               accept="image/*"
               onChange={handleFileSelect}
               className="hidden"
+            />
+          </div>
+        )}
+
+        {/* Generate Caption & Hashtags Toggle - Only for IMAGE/VIDEO mode */}
+        {(mode === 'IMAGE' || mode === 'VIDEO') && (
+          <div className="flex items-center justify-between p-3 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
+            <div className="flex items-center gap-3">
+              <div className="size-8 rounded-full bg-[#506ced]/10 flex items-center justify-center">
+                <Type className="size-4 text-[#506ced]" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-slate-700 dark:text-slate-300">Auto-generate Caption & Hashtags</p>
+                <p className="text-xs text-slate-500">Uses +1 credit</p>
+              </div>
+            </div>
+            <Switch
+              checked={generateMetadata}
+              onCheckedChange={setGenerateMetadata}
             />
           </div>
         )}
@@ -374,18 +412,18 @@ export function ContentPromptPanel({
           >
             {isGenerating ? (
               <>
-                <span className="animate-spin">⏳</span>
+                <div className="size-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                 Generating...
               </>
             ) : (
               <>
-                <span>✨</span>
+                <Sparkles className="size-4" />
                 Generate {mode === 'TEXT' ? 'Text' : mode === 'IMAGE' ? 'Image' : 'Video'}
               </>
             )}
           </Button>
           <div className="flex items-center justify-center gap-2 text-xs text-slate-400 font-medium">
-            <span>ℹ️</span>
+            <Zap className="size-3" />
             {credits >= creditCost ? (
               <span>{creditCost} credits will be used</span>
             ) : (

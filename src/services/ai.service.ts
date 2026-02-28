@@ -392,7 +392,8 @@ Respond with only the copywriting content.`,
       }
 
       // Call Alibaba Cloud Wan text-to-video API
-      const response = await fetch(`${ALIBABA_API_URL}/services/aigc/video-generation`, {
+      // API Reference: https://www.alibabacloud.com/help/en/model-studio/text-to-video-api-reference
+      const response = await fetch(`${ALIBABA_API_URL}/services/aigc/video-generation/video-synthesis`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${apiKey}`,
@@ -405,7 +406,8 @@ Respond with only the copywriting content.`,
             prompt: options.prompt,
           },
           parameters: {
-            resolution: '720P',
+            size: '1280*720', // Text-to-video uses size, not resolution
+            prompt_extend: true,
             duration: options.duration || 5,
           },
         }),
@@ -435,6 +437,7 @@ Respond with only the copywriting content.`,
   /**
    * Generate video from reference image (Image-to-Video)
    * Animates a static image into a video
+   * API Reference: https://www.alibabacloud.com/help/en/model-studio/image-to-video-api-reference
    */
   private static async generateVideoFromImage(
     options: VideoGenerationOptions,
@@ -443,8 +446,8 @@ Respond with only the copywriting content.`,
     try {
       console.log('Using Image-to-Video mode...')
 
-      // Call image-to-video API
-      const response = await fetch(`${ALIBABA_API_URL}/services/aigc/video-generation`, {
+      // Call image-to-video API (same endpoint as text-to-video)
+      const response = await fetch(`${ALIBABA_API_URL}/services/aigc/video-generation/video-synthesis`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${apiKey}`,
@@ -454,11 +457,12 @@ Respond with only the copywriting content.`,
         body: JSON.stringify({
           model: 'wan2.1-i2v-plus', // Image-to-video model
           input: {
-            image_url: options.referenceImageUrl,
             prompt: options.prompt,
+            img_url: options.referenceImageUrl, // Must be img_url, not image_url
           },
           parameters: {
             resolution: '720P',
+            prompt_extend: true,
             duration: options.duration || 5,
           },
         }),
@@ -497,7 +501,8 @@ Respond with only the copywriting content.`,
       await this.simulateProcessing(5000)
       
       try {
-        const response = await fetch(`${ALIBABA_API_URL}/tasks/${taskId}`, {
+        // Poll video-synthesis task status
+        const response = await fetch(`${ALIBABA_API_URL}/services/aigc/video-generation/video-synthesis/${taskId}`, {
           headers: {
             'Authorization': `Bearer ${apiKey}`,
           },
@@ -506,6 +511,8 @@ Respond with only the copywriting content.`,
         if (!response.ok) continue
 
         const data = await response.json()
+        console.log(`Video poll attempt ${i + 1}:`, data.output?.task_status)
+        
         const status = data.output?.task_status
 
         if (status === 'SUCCEEDED') {
