@@ -33,7 +33,7 @@ export default function DashboardPage() {
   // TanStack Query hooks
   const { data: walletData } = useUserWallet()
   const { data: templatesData } = useTemplates({ limit: 6 })
-  const { data: generationsData } = useGenerations(6)
+  const { data: generationsData } = useGenerations({ limit: 6 })
   const generateMutation = useGenerate()
 
   const credits = walletData?.balance ?? 0

@@ -16,6 +16,8 @@ const generateSchema = z.object({
   aspectRatio: z.enum(['1:1', '16:9', '9:16', '4:3']).optional(),
   // Video options
   duration: z.number().min(1).max(30).optional(),
+  // Reference image for image-to-image or image-to-video
+  referenceUrl: z.string().min(1).optional(),
 })
 
 export async function POST(request: NextRequest) {
@@ -35,7 +37,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const { type, prompt, textType, tone, language, imageStyle, aspectRatio, duration } = result.data
+    const { type, prompt, textType, tone, language, imageStyle, aspectRatio, duration, referenceUrl } = result.data
 
     // Create generation (deducts credits)
     const createResult = await GenerationService.createGeneration(
@@ -84,6 +86,7 @@ export async function POST(request: NextRequest) {
           prompt,
           style: imageStyle,
           aspectRatio,
+          referenceImageUrl: referenceUrl,
         })
 
         if (aiResult.success && aiResult.result) {
@@ -110,6 +113,7 @@ export async function POST(request: NextRequest) {
         const aiResult = await AIService.generateVideo({
           prompt,
           duration,
+          referenceImageUrl: referenceUrl,
         })
 
         if (aiResult.success && aiResult.result) {

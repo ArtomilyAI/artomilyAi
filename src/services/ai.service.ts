@@ -20,12 +20,14 @@ export interface ImageGenerationOptions {
   style?: string
   aspectRatio?: string
   size?: string
+  referenceImageUrl?: string // For image-to-image transformation
 }
 
 export interface VideoGenerationOptions {
   prompt: string
   duration?: number
   style?: string
+  referenceImageUrl?: string // For image-to-video animation
 }
 
 export interface AIResult {
@@ -43,6 +45,7 @@ const ALIBABA_API_URL = 'https://dashscope-intl.aliyuncs.com/api/v1'
 // Model names
 const TEXT_MODEL = 'qwen-plus' // Options: qwen-turbo, qwen-plus, qwen-max
 const IMAGE_MODEL = 'wan2.6-t2i' // Wan 2.6 text-to-image
+const IMAGE_EDIT_MODEL = 'qwen-image-edit-max' // Qwen Image Edit for image-to-image
 
 // Get API key from environment
 const getApiKey = () => {
@@ -153,6 +156,7 @@ Respond with only the copywriting content.`,
 
   /**
    * Generate image using Wan 2.6 (Alibaba Cloud)
+   * Supports both text-to-image and image-to-image (with reference)
    * API Reference: https://www.alibabacloud.com/help/en/model-studio/text-to-image-v2-api-reference
    */
   static async generateImage(options: ImageGenerationOptions): Promise<AIResult> {
@@ -182,6 +186,12 @@ Respond with only the copywriting content.`,
       console.log('Calling Wan API for image generation...')
       console.log('Prompt:', stylePrompt)
       console.log('Size:', size)
+      console.log('Reference Image:', options.referenceImageUrl ? 'Provided' : 'None')
+
+      // If reference image is provided, use image-to-image mode
+      if (options.referenceImageUrl) {
+        return await this.generateImageFromImage(options, apiKey, stylePrompt, size)
+      }
 
       // Call Alibaba Cloud Wan text-to-image API (synchronous mode)
       const response = await fetch(`${ALIBABA_API_URL}/services/aigc/multimodal-generation/generation`, {
@@ -243,6 +253,7 @@ Respond with only the copywriting content.`,
             model: IMAGE_MODEL,
             provider: 'alibaba-wan',
             size,
+            mode: 'text-to-image',
             requestId: data.request_id,
           },
         }
@@ -253,6 +264,91 @@ Respond with only the copywriting content.`,
     } catch (error) {
       console.error('Wan image error:', error)
       return this.generateImageMock(options)
+    }
+  }
+
+  /**
+   * Generate image from reference image (Image-to-Image)
+   * Uses Qwen-Image-Edit for transformation/editing
+   * API Reference: https://www.alibabacloud.com/help/en/model-studio/qwen-image-edit
+   */
+  private static async generateImageFromImage(
+    options: ImageGenerationOptions,
+    apiKey: string,
+    stylePrompt: string,
+    size: string
+  ): Promise<AIResult> {
+    try {
+      console.log('Using Image-to-Image mode with Qwen-Image-Edit...')
+
+      // Qwen-Image-Edit uses the multimodal generation API
+      // The image is provided as content, followed by text instruction
+      const response = await fetch(`${ALIBABA_API_URL}/services/aigc/multimodal-generation/generation`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: IMAGE_EDIT_MODEL,
+          input: {
+            messages: [
+              {
+                role: 'user',
+                content: [
+                  {
+                    image: options.referenceImageUrl,
+                  },
+                  {
+                    text: stylePrompt,
+                  },
+                ],
+              },
+            ],
+          },
+          parameters: {
+            n: 1,
+            prompt_extend: true,
+            watermark: false,
+            negative_prompt: 'blurry, low quality, distorted, deformed, ugly, bad anatomy',
+            size,
+          },
+        }),
+      })
+
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error('Qwen Image Edit API error:', errorText)
+        // Fallback to text-to-image
+        return this.generateImage({ ...options, referenceImageUrl: undefined })
+      }
+
+      const data = await response.json()
+      console.log('Qwen Image Edit response:', JSON.stringify(data, null, 2))
+
+      // Response format: output.choices[0].message.content[0].image
+      const imageUrl = data.output?.choices?.[0]?.message?.content?.[0]?.image
+
+      if (imageUrl) {
+        console.log('Image-to-Image successful')
+        return {
+          success: true,
+          result: imageUrl,
+          metadata: {
+            model: IMAGE_EDIT_MODEL,
+            provider: 'alibaba-qwen',
+            size,
+            mode: 'image-to-image',
+            requestId: data.request_id,
+          },
+        }
+      }
+
+      return { success: false, error: 'Image transformation failed' }
+    } catch (error) {
+      console.error('I2I error:', error)
+      // Fallback to regular generation
+      return this.generateImage({ ...options, referenceImageUrl: undefined })
     }
   }
 
@@ -274,6 +370,7 @@ Respond with only the copywriting content.`,
 
   /**
    * Generate video using Wan (Alibaba Cloud)
+   * Supports both text-to-video and image-to-video (with reference image)
    */
   static async generateVideo(options: VideoGenerationOptions): Promise<AIResult> {
     const apiKey = getApiKey()
@@ -286,8 +383,15 @@ Respond with only the copywriting content.`,
 
     try {
       console.log('Calling Wan API for video generation...')
+      console.log('Prompt:', options.prompt)
+      console.log('Reference Image:', options.referenceImageUrl ? 'Provided' : 'None')
 
-      // Call Alibaba Cloud Wan video generation API
+      // If reference image is provided, use image-to-video mode
+      if (options.referenceImageUrl) {
+        return await this.generateVideoFromImage(options, apiKey)
+      }
+
+      // Call Alibaba Cloud Wan text-to-video API
       const response = await fetch(`${ALIBABA_API_URL}/services/aigc/video-generation`, {
         method: 'POST',
         headers: {
@@ -321,7 +425,7 @@ Respond with only the copywriting content.`,
       }
 
       // Poll for video result
-      return await this.pollVideoTask(taskId, apiKey)
+      return await this.pollVideoTask(taskId, apiKey, 'text-to-video')
     } catch (error) {
       console.error('Wan video error:', error)
       return this.generateVideoMock(options)
@@ -329,9 +433,64 @@ Respond with only the copywriting content.`,
   }
 
   /**
+   * Generate video from reference image (Image-to-Video)
+   * Animates a static image into a video
+   */
+  private static async generateVideoFromImage(
+    options: VideoGenerationOptions,
+    apiKey: string
+  ): Promise<AIResult> {
+    try {
+      console.log('Using Image-to-Video mode...')
+
+      // Call image-to-video API
+      const response = await fetch(`${ALIBABA_API_URL}/services/aigc/video-generation`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+          'X-DashScope-Async': 'enable',
+        },
+        body: JSON.stringify({
+          model: 'wan2.1-i2v-plus', // Image-to-video model
+          input: {
+            image_url: options.referenceImageUrl,
+            prompt: options.prompt,
+          },
+          parameters: {
+            resolution: '720P',
+            duration: options.duration || 5,
+          },
+        }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        console.error('Alibaba I2V API error:', errorData)
+        // Fallback to text-to-video
+        return this.generateVideo({ ...options, referenceImageUrl: undefined })
+      }
+
+      const data = await response.json()
+      const taskId = data.output?.task_id
+
+      if (!taskId) {
+        return { success: false, error: 'No task ID returned for I2V' }
+      }
+
+      // Poll for video result
+      return await this.pollVideoTask(taskId, apiKey, 'image-to-video')
+    } catch (error) {
+      console.error('I2V error:', error)
+      // Fallback to text-to-video
+      return this.generateVideo({ ...options, referenceImageUrl: undefined })
+    }
+  }
+
+  /**
    * Poll for async video generation task result
    */
-  private static async pollVideoTask(taskId: string, apiKey: string): Promise<AIResult> {
+  private static async pollVideoTask(taskId: string, apiKey: string, mode: string = 'text-to-video'): Promise<AIResult> {
     const maxAttempts = 120 // 10 minutes max (5s intervals)
     
     for (let i = 0; i < maxAttempts; i++) {
@@ -356,8 +515,9 @@ Respond with only the copywriting content.`,
               success: true,
               result: videoUrl,
               metadata: {
-                model: 'wan2.1-t2v-turbo',
+                model: mode === 'image-to-video' ? 'wan2.1-i2v-plus' : 'wan2.1-t2v-turbo',
                 provider: 'alibaba-wan',
+                mode,
                 taskId,
                 duration: data.output?.duration,
               },

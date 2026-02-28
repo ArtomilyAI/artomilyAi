@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -8,18 +8,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Textarea } from '@/components/ui/textarea'
-
-interface Template {
-  id: string
-  name: string
-  description?: string
-  prompt: string
-  type: 'TEXT' | 'IMAGE' | 'VIDEO' | 'UPSCALE'
-  category: string
-  tags: string[]
-  thumbnail?: string
-  usageCount: number
-}
+import { useTemplates, useTemplateUsage, type Template } from '@/hooks/use-queries'
 
 const CATEGORIES = [
   { value: 'all', label: 'All Templates', icon: '🌟' },
@@ -35,34 +24,22 @@ const CATEGORIES = [
 
 export default function TemplatesPage() {
   const router = useRouter()
-  const [templates, setTemplates] = useState<Template[]>([])
-  const [loading, setLoading] = useState(true)
-  const [activeCategory, setActiveCategory] = useState('all')
+  const [activeCategory, setActiveCategory] = useState<string>('all')
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null)
   const [customPrompt, setCustomPrompt] = useState('')
 
-  useEffect(() => {
-    fetchTemplates()
-  }, [activeCategory, searchQuery])
+  // TanStack Query hooks with debounced search
+  const { data, isLoading, isFetching } = useTemplates({
+    category: activeCategory,
+    search: searchQuery || undefined,
+    limit: 50,
+  })
+  
+  const templateUsage = useTemplateUsage()
 
-  const fetchTemplates = async () => {
-    setLoading(true)
-    try {
-      const params = new URLSearchParams()
-      params.set('limit', '50')
-      if (activeCategory !== 'all') params.set('category', activeCategory)
-      if (searchQuery) params.set('search', searchQuery)
-
-      const res = await fetch(`/api/templates?${params.toString()}`)
-      const data = await res.json()
-      setTemplates(data.templates || [])
-    } catch (err) {
-      console.error('Failed to fetch templates:', err)
-    } finally {
-      setLoading(false)
-    }
-  }
+  const templates = data?.templates ?? []
+  const loading = isLoading || isFetching
 
   const handleSelectTemplate = (template: Template) => {
     setSelectedTemplate(template)
@@ -71,6 +48,9 @@ export default function TemplatesPage() {
 
   const handleUseTemplate = () => {
     if (!selectedTemplate) return
+
+    // Increment usage
+    templateUsage.mutate(selectedTemplate.id)
 
     // Store the template data in sessionStorage and redirect to dashboard
     sessionStorage.setItem('selectedTemplate', JSON.stringify({
@@ -108,13 +88,20 @@ export default function TemplatesPage() {
             variant={activeCategory === cat.value ? 'default' : 'outline'}
             size="sm"
             onClick={() => setActiveCategory(cat.value)}
-            className={activeCategory === cat.value ? 'bg-primary hover:bg-primary/90' : ''}
+            className={activeCategory === cat.value ? 'bg-[#506ced] hover:bg-[#506ced]/90' : ''}
           >
             <span className="mr-1">{cat.icon}</span>
             {cat.label}
           </Button>
         ))}
       </div>
+
+      {/* Loading indicator for filter changes */}
+      {isFetching && !isLoading && (
+        <div className="text-center py-4">
+          <span className="text-slate-400">Updating...</span>
+        </div>
+      )}
 
       {/* Templates Grid */}
       {loading ? (
@@ -134,14 +121,14 @@ export default function TemplatesPage() {
         </div>
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {templates.map((template) => (
+          {templates.map((template: Template) => (
             <Card
               key={template.id}
-              className="group cursor-pointer hover:ring-2 hover:ring-primary/50 transition-all overflow-hidden bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800"
+              className="group cursor-pointer hover:ring-2 hover:ring-[#506ced]/50 transition-all overflow-hidden bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800"
               onClick={() => handleSelectTemplate(template)}
             >
               {/* Thumbnail */}
-              <div className="aspect-[4/5] relative overflow-hidden bg-gradient-to-br from-primary/10 to-pink-500/10">
+              <div className="aspect-[4/5] relative overflow-hidden bg-gradient-to-br from-[#506ced]/10 to-pink-500/10">
                 {template.thumbnail ? (
                   <img
                     src={template.thumbnail}
@@ -157,7 +144,7 @@ export default function TemplatesPage() {
                 )}
 
                 {/* Overlay */}
-                <div className="absolute inset-0 bg-primary/80 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                <div className="absolute inset-0 bg-[#506ced]/80 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                   <span className="text-white font-semibold text-sm">Use Template</span>
                 </div>
 
@@ -173,7 +160,7 @@ export default function TemplatesPage() {
                 <div className="flex items-center gap-2 mb-1">
                   <Badge
                     variant="secondary"
-                    className="text-xs bg-primary/10 text-primary border-0"
+                    className="text-xs bg-[#506ced]/10 text-[#506ced] border-0"
                   >
                     {template.type}
                   </Badge>
@@ -191,7 +178,7 @@ export default function TemplatesPage() {
                 )}
                 {template.tags.length > 0 && (
                   <div className="flex gap-1 mt-2 flex-wrap">
-                    {template.tags.slice(0, 3).map((tag, i) => (
+                    {template.tags.slice(0, 3).map((tag: string, i: number) => (
                       <span
                         key={i}
                         className="text-[10px] px-1.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500"
@@ -250,7 +237,7 @@ export default function TemplatesPage() {
 
                 {/* Tags */}
                 <div className="flex gap-2 flex-wrap">
-                  {selectedTemplate.tags.map((tag, i) => (
+                  {selectedTemplate.tags.map((tag: string, i: number) => (
                     <Badge key={i} variant="secondary" className="text-xs">
                       #{tag}
                     </Badge>
@@ -260,8 +247,9 @@ export default function TemplatesPage() {
                 {/* Actions */}
                 <div className="flex gap-2">
                   <Button
-                    className="flex-1 bg-primary hover:bg-primary/90"
+                    className="flex-1 bg-[#506ced] hover:bg-[#506ced]/90"
                     onClick={handleUseTemplate}
+                    disabled={templateUsage.isPending}
                   >
                     <span className="mr-2">✨</span>
                     Use This Template

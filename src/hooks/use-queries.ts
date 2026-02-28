@@ -22,6 +22,7 @@ export interface Generation {
   resultUrl: string | null
   cost: number
   status: 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED'
+  isPublic: boolean
   createdAt: string
 }
 
@@ -31,21 +32,23 @@ export interface UserWallet {
 
 // Query Keys - centralized for easy invalidation
 export const queryKeys = {
-  templates: (filters?: { category?: string; limit?: number }) => 
+  templates: (filters?: { category?: string; type?: string; search?: string; limit?: number }) => 
     ['templates', filters] as const,
   template: (id: string) => ['template', id] as const,
-  generations: (limit?: number) => ['generations', limit] as const,
+  generations: (filters?: { type?: string; limit?: number }) => ['generations', filters] as const,
   generation: (id: string) => ['generation', id] as const,
   userWallet: () => ['user', 'wallet'] as const,
 }
 
 // Templates Hook
-export function useTemplates(filters?: { category?: string; limit?: number }) {
+export function useTemplates(filters?: { category?: string; type?: string; search?: string; limit?: number }) {
   return useQuery({
     queryKey: queryKeys.templates(filters),
     queryFn: async () => {
       const params = new URLSearchParams()
-      if (filters?.category) params.set('category', filters.category)
+      if (filters?.category && filters.category !== 'all') params.set('category', filters.category)
+      if (filters?.type) params.set('type', filters.type)
+      if (filters?.search) params.set('search', filters.search)
       if (filters?.limit) params.set('limit', filters.limit.toString())
       
       const res = await fetch(`/api/templates?${params}`)
@@ -70,11 +73,16 @@ export function useTemplate(id: string) {
 }
 
 // Generations Hook
-export function useGenerations(limit: number = 50) {
+export function useGenerations(filters?: { type?: string; limit?: number }) {
+  const limit = filters?.limit ?? 50
   return useQuery({
-    queryKey: queryKeys.generations(limit),
+    queryKey: queryKeys.generations(filters),
     queryFn: async () => {
-      const res = await fetch(`/api/generations?limit=${limit}`)
+      const params = new URLSearchParams()
+      params.set('limit', limit.toString())
+      if (filters?.type && filters.type !== 'all') params.set('type', filters.type)
+      
+      const res = await fetch(`/api/generations?${params}`)
       if (!res.ok) throw new Error('Failed to fetch generations')
       return res.json()
     },
@@ -143,6 +151,42 @@ export function useDeleteGeneration() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.generations() })
+    },
+  })
+}
+
+// Toggle Generation Public Mutation Hook
+export function useToggleGenerationPublic() {
+  const queryClient = useQueryClient()
+  
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const res = await fetch(`/api/generations/${id}`, {
+        method: 'PATCH',
+      })
+      if (!res.ok) throw new Error('Failed to toggle public')
+      return res.json()
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.generations() })
+    },
+  })
+}
+
+// Use Template Mutation Hook
+export function useTemplateUsage() {
+  const queryClient = useQueryClient()
+  
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const res = await fetch(`/api/templates/${id}/use`, {
+        method: 'POST',
+      })
+      if (!res.ok) throw new Error('Failed to increment usage')
+      return res.json()
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.templates() })
     },
   })
 }

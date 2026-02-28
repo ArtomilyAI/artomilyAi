@@ -1,10 +1,10 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
-import type { Template } from '@/hooks/use-queries'
+import { useTemplates, useTemplateUsage, type Template } from '@/hooks/use-queries'
 
 interface TemplateHubProps {
   onSelectTemplate: (template: Template) => void
@@ -22,42 +22,29 @@ const CATEGORIES = [
 ] as const
 
 export function TemplateHub({ onSelectTemplate, templates: externalTemplates }: TemplateHubProps) {
-  const [internalTemplates, setInternalTemplates] = useState<Template[]>([])
-  const [loading, setLoading] = useState(true)
-  const [activeCategory, setActiveCategory] = useState('all')
-
-  // Use external templates if provided, otherwise use internal state
-  const templates = externalTemplates ?? internalTemplates
-
-  useEffect(() => {
-    // Skip fetching if external templates are provided
-    if (externalTemplates) {
-      setLoading(false)
-      return
-    }
-    fetchTemplates()
-  }, [activeCategory, externalTemplates])
-
-  const fetchTemplates = async () => {
-    setLoading(true)
-    try {
-      const url = activeCategory === 'all' 
-        ? '/api/templates?limit=12'
-        : `/api/templates?category=${activeCategory}&limit=12`
-      const res = await fetch(url)
-      const data = await res.json()
-      setInternalTemplates(data.templates || [])
-    } catch (err) {
-      console.error('Failed to fetch templates:', err)
-    } finally {
-      setLoading(false)
-    }
-  }
+  const [activeCategory, setActiveCategory] = useState<string>('all')
+  
+  // Use TanStack Query only if external templates not provided
+  const { data, isLoading, isFetching } = useTemplates(
+    externalTemplates ? undefined : { category: activeCategory, limit: 12 }
+  )
+  
+  const templateUsage = useTemplateUsage()
+  
+  // Use external templates if provided, otherwise use query data
+  const templates = externalTemplates ?? data?.templates ?? []
+  const loading = externalTemplates ? false : isLoading || isFetching
 
   // Filter by category if external templates provided
-  const filteredTemplates = externalTemplates && activeCategory !== 'all'
-    ? templates.filter(t => t.category === activeCategory)
+  const filteredTemplates: Template[] = externalTemplates && activeCategory !== 'all'
+    ? templates.filter((t: Template) => t.category === activeCategory)
     : templates
+
+  const handleSelectTemplate = async (template: Template) => {
+    // Increment usage count
+    templateUsage.mutate(template.id)
+    onSelectTemplate(template)
+  }
 
   return (
     <div className="space-y-6">
@@ -77,6 +64,13 @@ export function TemplateHub({ onSelectTemplate, templates: externalTemplates }: 
         ))}
       </div>
 
+      {/* Loading Overlay for filter changes */}
+      {isFetching && !isLoading && (
+        <div className="absolute inset-0 bg-white/50 dark:bg-slate-900/50 z-10 flex items-center justify-center rounded-xl">
+          <div className="animate-spin text-2xl">⏳</div>
+        </div>
+      )}
+
       {/* Templates Grid */}
       {loading ? (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
@@ -94,11 +88,11 @@ export function TemplateHub({ onSelectTemplate, templates: externalTemplates }: 
         </div>
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {filteredTemplates.map((template) => (
+          {filteredTemplates.map((template: Template) => (
             <Card
               key={template.id}
               className="group cursor-pointer hover:ring-2 hover:ring-[#506ced]/50 transition-all overflow-hidden bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800"
-              onClick={() => onSelectTemplate(template)}
+              onClick={() => handleSelectTemplate(template)}
             >
               {/* Thumbnail */}
               <div className="aspect-[4/5] relative overflow-hidden bg-gradient-to-br from-[#506ced]/10 to-pink-500/10">
@@ -141,7 +135,7 @@ export function TemplateHub({ onSelectTemplate, templates: externalTemplates }: 
                 )}
                 {template.tags.length > 0 && (
                   <div className="flex gap-1 mt-2 flex-wrap">
-                    {template.tags.slice(0, 2).map((tag, i) => (
+                    {template.tags.slice(0, 2).map((tag: string, i: number) => (
                       <span
                         key={i}
                         className="text-[10px] px-1.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500"

@@ -209,19 +209,20 @@ export function ContentPromptPanel({
           />
         </div>
 
-        {/* Reference Image/Video Upload - for IMAGE and VIDEO modes */}
+        {/* Reference Image Upload - for IMAGE and VIDEO modes (image-to-image / image-to-video) */}
         {(mode === 'IMAGE' || mode === 'VIDEO') && (
           <div className="space-y-2">
             <Label className="text-sm font-medium text-slate-700 dark:text-slate-300">
-              Reference {mode === 'IMAGE' ? 'Image' : 'Video'} (Optional)
+              {mode === 'IMAGE' ? 'Reference Image (Optional)' : 'Reference Image for Animation (Optional)'}
             </Label>
+            <p className="text-xs text-slate-500 dark:text-slate-400 -mt-1 mb-2">
+              {mode === 'IMAGE' 
+                ? 'Upload an image to transform or edit it based on your prompt'
+                : 'Upload a static image to animate it into a video based on your prompt'}
+            </p>
             {referencePreview ? (
               <div className="relative rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800">
-                {mode === 'IMAGE' ? (
-                  <img src={referencePreview} alt="Reference" className="w-full h-40 object-cover" />
-                ) : (
-                  <video src={referencePreview} className="w-full h-40 object-cover" />
-                )}
+                <img src={referencePreview} alt="Reference" className="w-full h-40 object-cover" />
                 <button
                   onClick={clearReference}
                   className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
@@ -235,20 +236,20 @@ export function ContentPromptPanel({
                 onClick={() => fileInputRef.current?.click()}
               >
                 <div className="size-12 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center mb-3 text-slate-500 dark:text-slate-400">
-                  <span className="text-2xl">📁</span>
+                  <span className="text-2xl">🖼️</span>
                 </div>
                 <p className="text-sm text-slate-600 dark:text-slate-400 font-medium">
-                  Click or drag to upload reference
+                  Click or drag to upload reference image
                 </p>
                 <p className="text-xs text-slate-400 mt-1">
-                  {mode === 'IMAGE' ? 'PNG, JPG up to 10MB' : 'MP4, MOV up to 50MB'}
+                  PNG, JPG, WebP up to 10MB
                 </p>
               </div>
             )}
             <input
               ref={fileInputRef}
               type="file"
-              accept={mode === 'IMAGE' ? 'image/*' : 'video/*'}
+              accept="image/*"
               onChange={handleFileSelect}
               className="hidden"
             />
