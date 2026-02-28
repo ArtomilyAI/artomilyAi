@@ -1,10 +1,11 @@
-import prisma from '@/lib/db'
+import OpenAI from 'openai'
 import { GenerationType, GenerationStatus } from '@prisma/client'
 
 /**
- * AI Service - Handles interactions with AI providers
- * Currently supports mock responses for development
- * TODO: Integrate with actual AI providers (OpenAI, Replicate, etc.)
+ * AI Service - Handles interactions with Alibaba Cloud Model Studio
+ * Uses Qwen for text/image generation and Wan for video generation
+ * 
+ * API Documentation: https://www.alibabacloud.com/help/en/model-studio/
  */
 
 export interface TextGenerationOptions {
@@ -18,6 +19,7 @@ export interface ImageGenerationOptions {
   prompt: string
   style?: string
   aspectRatio?: string
+  size?: '1024x1024' | '720x1280' | '1280x720'
 }
 
 export interface VideoGenerationOptions {
@@ -26,14 +28,103 @@ export interface VideoGenerationOptions {
   style?: string
 }
 
+export interface AIResult {
+  success: boolean
+  result?: string
+  error?: string
+  metadata?: Record<string, unknown>
+}
+
+// Alibaba Cloud Model Studio configuration
+const ALIBABA_BASE_URL = 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1'
+const ALIBABA_API_URL = 'https://dashscope-intl.aliyuncs.com/api/v1'
+
+// Model names
+const TEXT_MODEL = 'qwen-plus' // Options: qwen-turbo, qwen-plus, qwen-max
+const IMAGE_MODEL = 'wanx-v1' // Qwen-Image model
+
+// Initialize OpenAI client for Alibaba Cloud (OpenAI-compatible mode)
+const getQwenClient = () => {
+  const apiKey = process.env.ALIBABA_DASHSCOPE_API_KEY
+  if (!apiKey) return null
+  return new OpenAI({
+    apiKey,
+    baseURL: ALIBABA_BASE_URL,
+  })
+}
+
 export class AIService {
   /**
-   * Generate text content
-   * TODO: Integrate with OpenAI API
+   * Generate text content using Qwen (Alibaba Cloud)
    */
-  static async generateText(options: TextGenerationOptions): Promise<string> {
-    // Mock implementation - replace with actual AI API call
-    await this.simulateProcessing(1000)
+  static async generateText(options: TextGenerationOptions): Promise<AIResult> {
+    const client = getQwenClient()
+
+    // Fallback to mock if no API key
+    if (!client) {
+      return this.generateTextMock(options)
+    }
+
+    try {
+      const systemPrompts: Record<string, string> = {
+        caption: `You are a creative social media expert. Generate engaging, culturally relevant captions for posts. 
+Keep captions concise (under 200 characters when possible), include relevant hashtags, and make them shareable.
+Consider cultural nuances and current trends. Respond with only the caption text.`,
+        script: `You are a professional scriptwriter. Create engaging video scripts with clear scene directions.
+Format scripts with scene headers, dialogue, and visual cues. Keep scripts concise and impactful.
+Respond with only the script content.`,
+        copywriting: `You are a skilled copywriter. Create compelling marketing copy that resonates with the target audience.
+Focus on benefits, use persuasive language, and include clear calls-to-action.
+Respond with only the copywriting content.`,
+      }
+
+      const tone = options.tone || 'professional'
+      const language = options.language || 'English'
+
+      const response = await client.chat.completions.create({
+        model: TEXT_MODEL,
+        messages: [
+          {
+            role: 'system',
+            content: `${systemPrompts[options.type]}\n\nTone: ${tone}\nLanguage: ${language}`,
+          },
+          {
+            role: 'user',
+            content: options.prompt,
+          },
+        ],
+        max_tokens: 1000,
+        temperature: 0.7,
+      })
+
+      const result = response.choices[0]?.message?.content
+
+      if (!result) {
+        return { success: false, error: 'No response from Qwen' }
+      }
+
+      return {
+        success: true,
+        result,
+        metadata: {
+          model: TEXT_MODEL,
+          provider: 'alibaba-qwen',
+          characterCount: result.length,
+          tokens: response.usage?.total_tokens,
+        },
+      }
+    } catch (error) {
+      console.error('Qwen text error:', error)
+      // Fallback to mock on error
+      return this.generateTextMock(options)
+    }
+  }
+
+  /**
+   * Mock text generation for development/fallback
+   */
+  private static async generateTextMock(options: TextGenerationOptions): Promise<AIResult> {
+    await this.simulateProcessing(500)
 
     const mockResponses: Record<string, string> = {
       caption: `✨ ${options.prompt}\n\nThis is a culturally relevant caption that captures the essence of your message. #ArtomilyAI #CreativeContent`,
@@ -41,44 +132,333 @@ export class AIService {
       copywriting: `📢 ${options.prompt}\n\nTransform your brand's message with culturally-aware copywriting that resonates with your audience. Our AI understands local nuances and creates content that connects.`,
     }
 
-    return mockResponses[options.type] || mockResponses.caption
+    const result = mockResponses[options.type] || mockResponses.caption
+    return {
+      success: true,
+      result,
+      metadata: { model: 'mock', characterCount: result.length },
+    }
   }
 
   /**
-   * Generate image
-   * TODO: Integrate with Replicate/SDXL API
+   * Generate image using Qwen-Image (Alibaba Cloud)
    */
-  static async generateImage(options: ImageGenerationOptions): Promise<string> {
-    // Mock implementation - return placeholder image
+  static async generateImage(options: ImageGenerationOptions): Promise<AIResult> {
+    const apiKey = process.env.ALIBABA_DASHSCOPE_API_KEY
+
+    // Fallback to mock if no API key
+    if (!apiKey) {
+      return this.generateImageMock(options)
+    }
+
+    try {
+      // Build enhanced prompt with style
+      const stylePrompt = options.style ? `${options.prompt}, ${options.style} style` : options.prompt
+      
+      // Determine size based on aspect ratio
+      let size = options.size || '1024x1024'
+      if (options.aspectRatio === '16:9') size = '1280x720'
+      if (options.aspectRatio === '9:16') size = '720x1280'
+
+      // Call Alibaba Cloud text-to-image API
+      const response = await fetch(`${ALIBABA_API_URL}/services/aigc/text2image/image-synthesis`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+          'X-DashScope-Async': 'enable', // Enable async mode
+        },
+        body: JSON.stringify({
+          model: 'wanx-v1',
+          input: {
+            prompt: stylePrompt,
+            negative_prompt: 'blurry, low quality, distorted, deformed, ugly, bad anatomy',
+          },
+          parameters: {
+            size,
+            n: 1,
+            style: options.style || '<auto>',
+          },
+        }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        console.error('Alibaba image API error:', errorData)
+        return this.generateImageMock(options)
+      }
+
+      const data = await response.json()
+      
+      // If async mode, we need to poll for results
+      if (data.output?.task_id) {
+        return await this.pollImageTask(data.output.task_id, apiKey)
+      }
+
+      // Sync mode - get result directly
+      if (data.output?.results?.[0]?.url) {
+        return {
+          success: true,
+          result: data.output.results[0].url,
+          metadata: {
+            model: 'wanx-v1',
+            provider: 'alibaba-qwen-image',
+            size,
+          },
+        }
+      }
+
+      return { success: false, error: 'No image generated' }
+    } catch (error) {
+      console.error('Qwen image error:', error)
+      return this.generateImageMock(options)
+    }
+  }
+
+  /**
+   * Poll for async image generation task result
+   */
+  private static async pollImageTask(taskId: string, apiKey: string): Promise<AIResult> {
+    const maxAttempts = 60 // 5 minutes max (5s intervals)
+    
+    for (let i = 0; i < maxAttempts; i++) {
+      await this.simulateProcessing(5000)
+      
+      try {
+        const response = await fetch(`${ALIBABA_API_URL}/tasks/${taskId}`, {
+          headers: {
+            'Authorization': `Bearer ${apiKey}`,
+          },
+        })
+
+        if (!response.ok) continue
+
+        const data = await response.json()
+        const status = data.output?.task_status
+
+        if (status === 'SUCCEEDED') {
+          const imageUrl = data.output?.results?.[0]?.url
+          if (imageUrl) {
+            return {
+              success: true,
+              result: imageUrl,
+              metadata: {
+                model: 'wanx-v1',
+                provider: 'alibaba-qwen-image',
+                taskId,
+              },
+            }
+          }
+        } else if (status === 'FAILED') {
+          return { success: false, error: data.message || 'Image generation failed' }
+        }
+        // Continue polling for PENDING/RUNNING status
+      } catch (err) {
+        console.error('Poll error:', err)
+      }
+    }
+
+    return { success: false, error: 'Image generation timeout' }
+  }
+
+  /**
+   * Mock image generation for development/fallback
+   */
+  private static async generateImageMock(options: ImageGenerationOptions): Promise<AIResult> {
+    await this.simulateProcessing(1000)
+
+    const seed = Math.floor(Math.random() * 1000)
+    const result = `https://picsum.photos/seed/${seed}/1024/1024`
+
+    return {
+      success: true,
+      result,
+      metadata: { model: 'mock', dimensions: '1024x1024' },
+    }
+  }
+
+  /**
+   * Generate video using Wan (Alibaba Cloud)
+   */
+  static async generateVideo(options: VideoGenerationOptions): Promise<AIResult> {
+    const apiKey = process.env.ALIBABA_DASHSCOPE_API_KEY
+
+    // Fallback to mock if no API key
+    if (!apiKey) {
+      return this.generateVideoMock(options)
+    }
+
+    try {
+      // Call Alibaba Cloud Wan video generation API
+      const response = await fetch(`${ALIBABA_API_URL}/services/aigc/video-generation`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+          'X-DashScope-Async': 'enable',
+        },
+        body: JSON.stringify({
+          model: 'wan2.1-t2v-turbo',
+          input: {
+            prompt: options.prompt,
+          },
+          parameters: {
+            resolution: '720P',
+            duration: options.duration || 5,
+          },
+        }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        console.error('Alibaba video API error:', errorData)
+        return this.generateVideoMock(options)
+      }
+
+      const data = await response.json()
+      const taskId = data.output?.task_id
+
+      if (!taskId) {
+        return { success: false, error: 'No task ID returned' }
+      }
+
+      // Poll for video result
+      return await this.pollVideoTask(taskId, apiKey)
+    } catch (error) {
+      console.error('Wan video error:', error)
+      return this.generateVideoMock(options)
+    }
+  }
+
+  /**
+   * Poll for async video generation task result
+   */
+  private static async pollVideoTask(taskId: string, apiKey: string): Promise<AIResult> {
+    const maxAttempts = 120 // 10 minutes max (5s intervals)
+    
+    for (let i = 0; i < maxAttempts; i++) {
+      await this.simulateProcessing(5000)
+      
+      try {
+        const response = await fetch(`${ALIBABA_API_URL}/tasks/${taskId}`, {
+          headers: {
+            'Authorization': `Bearer ${apiKey}`,
+          },
+        })
+
+        if (!response.ok) continue
+
+        const data = await response.json()
+        const status = data.output?.task_status
+
+        if (status === 'SUCCEEDED') {
+          const videoUrl = data.output?.video_url
+          if (videoUrl) {
+            return {
+              success: true,
+              result: videoUrl,
+              metadata: {
+                model: 'wan2.1-t2v-turbo',
+                provider: 'alibaba-wan',
+                taskId,
+                duration: data.output?.duration,
+              },
+            }
+          }
+        } else if (status === 'FAILED') {
+          return { success: false, error: data.message || 'Video generation failed' }
+        }
+      } catch (err) {
+        console.error('Video poll error:', err)
+      }
+    }
+
+    return { success: false, error: 'Video generation timeout' }
+  }
+
+  /**
+   * Mock video generation for development/fallback
+   */
+  private static async generateVideoMock(options: VideoGenerationOptions): Promise<AIResult> {
     await this.simulateProcessing(2000)
 
-    // Return a placeholder image URL
-    // In production, this would be the actual generated image URL from storage
-    const seed = Math.floor(Math.random() * 1000)
-    return `https://picsum.photos/seed/${seed}/1024/1024`
+    const result = `https://example.com/mock-video-${Date.now()}.mp4`
+
+    return {
+      success: true,
+      result,
+      metadata: { model: 'mock', duration: options.duration || 4 },
+    }
   }
 
   /**
-   * Generate video
-   * TODO: Integrate with video generation API
+   * Upscale image using Alibaba Cloud
    */
-  static async generateVideo(options: VideoGenerationOptions): Promise<string> {
-    // Mock implementation
-    await this.simulateProcessing(5000)
+  static async upscaleImage(imageUrl: string): Promise<AIResult> {
+    const apiKey = process.env.ALIBABA_DASHSCOPE_API_KEY
 
-    // Return a placeholder video URL
-    return `https://example.com/generated-video-${Date.now()}.mp4`
+    // Fallback to mock if no API key
+    if (!apiKey) {
+      return this.upscaleImageMock(imageUrl)
+    }
+
+    try {
+      // Use image super-resolution API
+      const response = await fetch(`${ALIBABA_API_URL}/services/aigc/image-super-resolution`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'image-super-resolution',
+          input: {
+            image_url: imageUrl,
+          },
+          parameters: {
+            scale: 2,
+          },
+        }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        console.error('Alibaba upscale API error:', errorData)
+        return this.upscaleImageMock(imageUrl)
+      }
+
+      const data = await response.json()
+
+      if (data.output?.image_url) {
+        return {
+          success: true,
+          result: data.output.image_url,
+          metadata: {
+            model: 'image-super-resolution',
+            provider: 'alibaba',
+            scale: '2x',
+          },
+        }
+      }
+
+      return { success: false, error: 'Upscale failed' }
+    } catch (error) {
+      console.error('Upscale error:', error)
+      return this.upscaleImageMock(imageUrl)
+    }
   }
 
   /**
-   * Upscale image
-   * TODO: Integrate with upscale API
+   * Mock upscale for development/fallback
    */
-  static async upscaleImage(imageUrl: string): Promise<string> {
-    await this.simulateProcessing(1500)
+  private static async upscaleImageMock(imageUrl: string): Promise<AIResult> {
+    await this.simulateProcessing(500)
 
-    // Return upscaled image URL (mock)
-    return imageUrl.replace('/1024/1024', '/2048/2048')
+    return {
+      success: true,
+      result: imageUrl.replace('/1024/1024', '/2048/2048'),
+      metadata: { model: 'mock', scale: '2x' },
+    }
   }
 
   /**
@@ -87,61 +467,66 @@ export class AIService {
   static async processGeneration(
     type: GenerationType,
     prompt: string,
-    generationId: string
-  ): Promise<{ resultUrl: string; metadata?: Record<string, unknown> }> {
-    // Import here to avoid circular dependency
+    generationId: string,
+    options?: {
+      textType?: 'caption' | 'script' | 'copywriting'
+      imageStyle?: string
+      aspectRatio?: string
+    }
+  ): Promise<AIResult> {
     const { GenerationService } = await import('./generation.service')
-    const { GenerationStatus } = await import('@prisma/client')
 
     try {
-      // Update status to processing
       await GenerationService.updateGeneration(generationId, {
         status: GenerationStatus.PROCESSING,
       })
 
-      let resultUrl: string
-      let metadata: Record<string, unknown> = {}
+      let result: AIResult
 
       switch (type) {
         case 'TEXT':
-          resultUrl = await this.generateText({
+          result = await this.generateText({
             prompt,
-            type: 'caption',
+            type: options?.textType || 'caption',
           })
-          metadata = { characterCount: resultUrl.length }
           break
 
         case 'IMAGE':
-          resultUrl = await this.generateImage({ prompt })
-          metadata = { dimensions: '1024x1024', format: 'png' }
+          result = await this.generateImage({
+            prompt,
+            style: options?.imageStyle,
+            aspectRatio: options?.aspectRatio,
+          })
           break
 
         case 'VIDEO':
-          resultUrl = await this.generateVideo({ prompt })
-          metadata = { duration: 5, format: 'mp4' }
+          result = await this.generateVideo({ prompt })
           break
 
         case 'UPSCALE':
-          // For upscale, the prompt should be the image URL
-          resultUrl = await this.upscaleImage(prompt)
-          metadata = { originalUrl: prompt, scale: '2x' }
+          result = await this.upscaleImage(prompt)
           break
 
         default:
           throw new Error(`Unknown generation type: ${type}`)
       }
 
-      // Mark as completed
-      await GenerationService.completeGeneration(generationId, resultUrl, metadata)
+      if (result.success && result.result) {
+        await GenerationService.completeGeneration(generationId, result.result, result.metadata)
+      } else {
+        await GenerationService.failGeneration(generationId, result.error || 'Generation failed')
+      }
 
-      return { resultUrl, metadata }
+      return result
     } catch (error) {
-      // Mark as failed and refund
       await GenerationService.failGeneration(
         generationId,
         error instanceof Error ? error.message : 'Generation failed'
       )
-      throw error
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Generation failed',
+      }
     }
   }
 

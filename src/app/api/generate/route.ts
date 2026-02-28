@@ -7,7 +7,15 @@ import { z } from 'zod'
 const generateSchema = z.object({
   type: z.enum(['TEXT', 'IMAGE', 'VIDEO', 'UPSCALE']),
   prompt: z.string().min(1).max(2000),
+  // Text options
   textType: z.enum(['caption', 'script', 'copywriting']).optional(),
+  tone: z.string().max(50).optional(),
+  language: z.string().max(50).optional(),
+  // Image options
+  imageStyle: z.string().max(100).optional(),
+  aspectRatio: z.enum(['1:1', '16:9', '9:16', '4:3']).optional(),
+  // Video options
+  duration: z.number().min(1).max(30).optional(),
 })
 
 export async function POST(request: NextRequest) {
@@ -27,7 +35,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const { type, prompt, textType } = result.data
+    const { type, prompt, textType, tone, language, imageStyle, aspectRatio, duration } = result.data
 
     // Create generation (deducts credits)
     const createResult = await GenerationService.createGeneration(
@@ -43,45 +51,110 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Process generation (in production, this would be queued)
-    // For now, we'll process synchronously for TEXT type
-    if (type === 'TEXT') {
-      try {
-        const textResult = await AIService.generateText({
+    // Process based on type
+    switch (type) {
+      case 'TEXT': {
+        const aiResult = await AIService.generateText({
           prompt,
           type: textType || 'caption',
+          tone,
+          language,
         })
 
-        await GenerationService.completeGeneration(
-          createResult.generationId!,
-          textResult,
-          { model: 'mock', characterCount: textResult.length }
-        )
-
-        return NextResponse.json({
-          success: true,
-          generationId: createResult.generationId,
-          result: textResult,
-        })
-      } catch (error) {
-        await GenerationService.failGeneration(
-          createResult.generationId!,
-          error instanceof Error ? error.message : 'Generation failed'
-        )
-        return NextResponse.json(
-          { error: error instanceof Error ? error.message : 'Generation failed' },
-          { status: 500 }
-        )
+        if (aiResult.success && aiResult.result) {
+          await GenerationService.completeGeneration(
+            createResult.generationId!,
+            aiResult.result,
+            aiResult.metadata
+          )
+          return NextResponse.json({
+            success: true,
+            generationId: createResult.generationId,
+            result: aiResult.result,
+            metadata: aiResult.metadata,
+          })
+        } else {
+          await GenerationService.failGeneration(createResult.generationId!, aiResult.error)
+          return NextResponse.json({ error: aiResult.error }, { status: 500 })
+        }
       }
-    }
 
-    // For IMAGE and VIDEO, return pending status (would be processed by queue)
-    return NextResponse.json({
-      success: true,
-      generationId: createResult.generationId,
-      status: 'PENDING',
-      message: 'Generation queued for processing',
-    })
+      case 'IMAGE': {
+        const aiResult = await AIService.generateImage({
+          prompt,
+          style: imageStyle,
+          aspectRatio,
+        })
+
+        if (aiResult.success && aiResult.result) {
+          await GenerationService.completeGeneration(
+            createResult.generationId!,
+            aiResult.result,
+            aiResult.metadata
+          )
+          return NextResponse.json({
+            success: true,
+            generationId: createResult.generationId,
+            result: aiResult.result,
+            metadata: aiResult.metadata,
+          })
+        } else {
+          await GenerationService.failGeneration(createResult.generationId!, aiResult.error)
+          return NextResponse.json({ error: aiResult.error }, { status: 500 })
+        }
+      }
+
+      case 'VIDEO': {
+        // Video generation is async - start processing and return pending
+        // In production, this would be handled by a job queue
+        const aiResult = await AIService.generateVideo({
+          prompt,
+          duration,
+        })
+
+        if (aiResult.success && aiResult.result) {
+          await GenerationService.completeGeneration(
+            createResult.generationId!,
+            aiResult.result,
+            aiResult.metadata
+          )
+          return NextResponse.json({
+            success: true,
+            generationId: createResult.generationId,
+            result: aiResult.result,
+            metadata: aiResult.metadata,
+          })
+        } else {
+          await GenerationService.failGeneration(createResult.generationId!, aiResult.error)
+          return NextResponse.json({ error: aiResult.error }, { status: 500 })
+        }
+      }
+
+      case 'UPSCALE': {
+        // For upscale, prompt should be the image URL
+        const aiResult = await AIService.upscaleImage(prompt)
+
+        if (aiResult.success && aiResult.result) {
+          await GenerationService.completeGeneration(
+            createResult.generationId!,
+            aiResult.result,
+            aiResult.metadata
+          )
+          return NextResponse.json({
+            success: true,
+            generationId: createResult.generationId,
+            result: aiResult.result,
+            metadata: aiResult.metadata,
+          })
+        } else {
+          await GenerationService.failGeneration(createResult.generationId!, aiResult.error)
+          return NextResponse.json({ error: aiResult.error }, { status: 500 })
+        }
+      }
+
+      default:
+        return NextResponse.json({ error: 'Unknown generation type' }, { status: 400 })
+    }
   } catch (error) {
     console.error('Generation error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
