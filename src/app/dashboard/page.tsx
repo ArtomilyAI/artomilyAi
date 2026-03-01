@@ -55,21 +55,22 @@ export default function DashboardPage() {
   const recentGenerations = generationsData?.generations ?? []
   const templates = templatesData?.templates ?? []
 
-  // Generate caption for image/video
-  const generateCaptionAndHashtags = async (imageUrl: string, type: 'IMAGE' | 'VIDEO') => {
+  // Generate caption for image/video with context
+  const generateCaptionAndHashtags = async (imageUrl: string, type: 'IMAGE' | 'VIDEO', prompt: string) => {
     try {
       advanceGenerationStep() // Move to caption step
       
-      const captionPrompt = type === 'IMAGE' 
-        ? 'Write an engaging social media caption for this image. Include relevant hashtags at the end.'
-        : 'Write an engaging social media caption for this video. Include relevant hashtags at the end.'
+      // Create a more contextual prompt that includes the original generation context
+      const contextualPrompt = type === 'IMAGE' 
+        ? `Write an engaging social media caption for this image. The image was generated based on this prompt: "${prompt}". Include relevant hashtags at the end.`
+        : `Write an engaging social media caption for this video. The video was generated based on this prompt: "${prompt}". Include relevant hashtags at the end.`
       
       const captionResponse = await fetch('/api/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           type: 'TEXT',
-          prompt: captionPrompt,
+          prompt: contextualPrompt,
           textType: 'caption',
         }),
       })
@@ -118,7 +119,7 @@ export default function DashboardPage() {
         
         // Generate caption and hashtags for video only if toggle is on
         if (data.generateMetadata) {
-          const { caption, hashtags } = await generateCaptionAndHashtags(videoResult, 'VIDEO')
+          const { caption, hashtags } = await generateCaptionAndHashtags(videoResult, 'VIDEO', data.prompt)
           setResult({
             video: videoResult,
             caption,
@@ -138,7 +139,7 @@ export default function DashboardPage() {
         
         // Generate caption and hashtags for image only if toggle is on
         if (data.generateMetadata) {
-          const { caption, hashtags } = await generateCaptionAndHashtags(imageResult, 'IMAGE')
+          const { caption, hashtags } = await generateCaptionAndHashtags(imageResult, 'IMAGE', data.prompt)
           setResult({
             image: imageResult,
             caption,

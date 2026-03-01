@@ -73,23 +73,6 @@ export default async function DashboardLayout({
                 </AvatarFallback>
               </Avatar>
             </div>
-
-            {/* Sign Out */}
-            <form
-              action={async () => {
-                'use server'
-                await signOut({ redirectTo: '/' })
-              }}
-            >
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                type="submit"
-                className="text-slate-500 hover:text-slate-900"
-              >
-                Sign Out
-              </Button>
-            </form>
           </div>
         </div>
       </header>

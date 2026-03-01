@@ -1,11 +1,12 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { gsap } from 'gsap'
 import ScrollTrigger from 'gsap/ScrollTrigger'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import Link from 'next/link'
+import { FileText, Image, Video, Moon, Gift, Sparkles, Laugh, Flame, Briefcase, Smartphone, TrendingUp } from 'lucide-react'
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -27,22 +28,21 @@ interface TrendingTemplatesSectionProps {
 }
 
 // Category display config
-const CATEGORY_CONFIG: Record<string, { gradient: string; icon: string }> = {
-  RAMADHAN: { gradient: 'from-amber-500/20 to-orange-600/20', icon: '🌙' },
-  CHINESE_NEW_YEAR: { gradient: 'from-red-500/20 to-rose-600/20', icon: '🧧' },
-  NATIONAL_DAY: { gradient: 'from-blue-500/20 to-indigo-600/20', icon: '🎆' },
-  TRENDING_MEME: { gradient: 'from-purple-500/20 to-pink-600/20', icon: '😂' },
-  VIRAL_TEMPLATE: { gradient: 'from-pink-500/20 to-red-600/20', icon: '🔥' },
-  BUSINESS: { gradient: 'from-slate-500/20 to-gray-600/20', icon: '💼' },
-  SOCIAL_MEDIA: { gradient: 'from-cyan-500/20 to-blue-600/20', icon: '📱' },
-  MARKETING: { gradient: 'from-green-500/20 to-emerald-600/20', icon: '📈' },
+const CATEGORY_CONFIG: Record<string, { gradient: string; icon: React.ReactNode }> = {
+  RAMADHAN: { gradient: 'from-amber-500/20 to-orange-600/20', icon: <Moon className="size-8 text-amber-600" /> },
+  CHINESE_NEW_YEAR: { gradient: 'from-red-500/20 to-rose-600/20', icon: <Gift className="size-8 text-red-600" /> },
+  NATIONAL_DAY: { gradient: 'from-blue-500/20 to-indigo-600/20', icon: <Sparkles className="size-8 text-blue-600" /> },
+  TRENDING_MEME: { gradient: 'from-purple-500/20 to-pink-600/20', icon: <Laugh className="size-8 text-purple-600" /> },
+  VIRAL_TEMPLATE: { gradient: 'from-pink-500/20 to-red-600/20', icon: <Flame className="size-8 text-pink-600" /> },
+  BUSINESS: { gradient: 'from-slate-500/20 to-gray-600/20', icon: <Briefcase className="size-8 text-slate-600" /> },
+  SOCIAL_MEDIA: { gradient: 'from-cyan-500/20 to-blue-600/20', icon: <Smartphone className="size-8 text-cyan-600" /> },
+  MARKETING: { gradient: 'from-green-500/20 to-emerald-600/20', icon: <TrendingUp className="size-8 text-green-600" /> },
 }
 
-const TYPE_ICONS: Record<string, string> = {
-  TEXT: '📝',
-  IMAGE: '🖼️',
-  VIDEO: '🎬',
-  UPSCALE: '🔍',
+const TYPE_ICONS: Record<string, React.ReactNode> = {
+  TEXT: <FileText className="size-4" />,
+  IMAGE: <Image className="size-4" />,
+  VIDEO: <Video className="size-4" />,
 }
 
 export function TrendingTemplatesSection({ templates }: TrendingTemplatesSectionProps) {
@@ -95,7 +95,7 @@ export function TrendingTemplatesSection({ templates }: TrendingTemplatesSection
       <div className="mx-auto max-w-7xl px-4">
         <div className="templates-header mb-10 flex items-center justify-between">
           <h2 className="text-slate-900 dark:text-white text-2xl font-bold">
-            Trending Cultural Templates
+            Trending Templates
           </h2>
           <Link
             href="/dashboard/templates"
@@ -122,17 +122,15 @@ export function TrendingTemplatesSection({ templates }: TrendingTemplatesSection
               <Link href={`/dashboard/templates?select=${template.id}`} key={template.id || index}>
                 <Card className="template-card bg-white dark:bg-slate-800 rounded-2xl overflow-hidden border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-xl transition-all duration-300 group cursor-pointer h-full">
                   <div
-                    className={`h-48 bg-gradient-to-br ${config.gradient} relative group-hover:scale-105 transition-transform duration-500 flex items-center justify-center`}
+                    className={`h-48 bg-gradient-to-br ${config.gradient} relative group-hover:scale-105 transition-transform duration-500 flex items-center justify-center overflow-hidden`}
                   >
                     <Badge
                       variant="secondary"
-                      className="absolute top-4 left-4 bg-white/90 dark:bg-slate-900/90 backdrop-blur text-xs font-bold"
+                      className="absolute top-4 left-4 bg-white/90 dark:bg-slate-900/90 backdrop-blur text-xs font-bold z-10"
                     >
                       {formatCategory(template.category)}
                     </Badge>
-                    <div className="size-16 rounded-full bg-white/20 flex items-center justify-center">
-                      <span className="text-4xl">{config.icon}</span>
-                    </div>
+                    <TemplateThumbnail thumbnail={template.thumbnail} icon={config.icon} name={template.name} />
                   </div>
 
                   <CardContent className="p-6">
@@ -174,7 +172,32 @@ export function TrendingTemplatesSection({ templates }: TrendingTemplatesSection
   )
 }
 
-// Helper to format category enum to display text
+interface TemplateThumbnailProps {
+  thumbnail: string | null
+  icon: React.ReactNode
+  name: string
+}
+
+function TemplateThumbnail({ thumbnail, icon, name }: TemplateThumbnailProps) {
+  const [imageError, setImageError] = useState(false)
+
+  if (!thumbnail || imageError) {
+    return (
+      <div className="size-16 rounded-full bg-white/20 flex items-center justify-center">
+        {icon}
+      </div>
+    )
+  }
+
+  return (
+    <img
+      src={thumbnail}
+      alt={name}
+      className="w-full h-full object-cover"
+      onError={() => setImageError(true)}
+    />
+  )
+}
 function formatCategory(category: string): string {
   return category
     .replace(/_/g, ' ')
