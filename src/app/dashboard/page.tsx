@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { ContentPromptPanel } from '@/components/dashboard/content-prompt-panel'
 import { ResultDisplay } from '@/components/dashboard/result-display'
 import { TemplateHub } from '@/components/dashboard/template-hub'
@@ -22,6 +22,7 @@ import {
   useGenerations, 
   useUserWallet, 
   useGenerate,
+  useGenerationStatus,
   type Template,
   type Generation 
 } from '@/hooks/use-queries'
@@ -32,6 +33,10 @@ export default function DashboardPage() {
   const [prompt, setPrompt] = useState('')
   const [referenceUrl, setReferenceUrl] = useState<string | null>(null)
   const [isModalComplete, setIsModalComplete] = useState(false)
+  const [pendingGenerationId, setPendingGenerationId] = useState<string | null>(null)
+  const [pendingGenerationType, setPendingGenerationType] = useState<'TEXT' | 'IMAGE' | 'VIDEO' | null>(null)
+  const [pendingGenerateMetadata, setPendingGenerateMetadata] = useState(false)
+  const [pendingPrompt, setPendingPrompt] = useState('')
   
   // Results state (not cached - UI state only)
   const [result, setResult] = useState<{
@@ -43,17 +48,28 @@ export default function DashboardPage() {
   }>({})
   const [error, setError] = useState<string | null>(null)
   const [isGenerating, setIsGenerating] = useState(false)
-  const generationTypeRef = useRef<'TEXT' | 'IMAGE' | 'VIDEO'>('IMAGE')
+  const [generationMode, setGenerationMode] = useState<'TEXT' | 'IMAGE' | 'VIDEO'>('IMAGE')
 
   // TanStack Query hooks
   const { data: walletData } = useUserWallet()
   const { data: templatesData } = useTemplates({ limit: 6 })
-  const { data: generationsData } = useGenerations({ limit: 6 })
+  const { data: generationsData, refetch: refetchGenerations } = useGenerations({ limit: 6 })
   const generateMutation = useGenerate()
+  
+  // Poll for generation status when there's a pending generation
+  const { data: generationStatus } = useGenerationStatus(pendingGenerationId, {
+    enabled: !!pendingGenerationId,
+  })
 
   const credits = walletData?.balance ?? 0
   const recentGenerations = generationsData?.generations ?? []
   const templates = templatesData?.templates ?? []
+
+  // Extract hashtags helper
+  const extractHashtags = (text: string): string[] => {
+    const matches = text.match(/#\w+/g) || []
+    return matches.map((tag) => tag.replace('#', ''))
+  }
 
   // Generate caption for image/video with context
   const generateCaptionAndHashtags = async (imageUrl: string, type: 'IMAGE' | 'VIDEO', prompt: string) => {
@@ -65,13 +81,12 @@ export default function DashboardPage() {
         ? `Write an engaging social media caption for this image. The image was generated based on this prompt: "${prompt}". Include relevant hashtags at the end.`
         : `Write an engaging social media caption for this video. The video was generated based on this prompt: "${prompt}". Include relevant hashtags at the end.`
       
-      const captionResponse = await fetch('/api/generate', {
+      const captionResponse = await fetch('/api/generate/caption', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          type: 'TEXT',
-          prompt: contextualPrompt,
-          textType: 'caption',
+          type: type,
+          prompt: prompt,
         }),
       })
       
@@ -91,6 +106,71 @@ export default function DashboardPage() {
     return { caption: null, hashtags: [] }
   }
 
+  // Handle generation status updates
+  useEffect(() => {
+    if (!generationStatus || !pendingGenerationId) return
+
+    if (generationStatus.status === 'COMPLETED' && generationStatus.resultUrl) {
+      // Generation completed - update result
+      const resultUrl = generationStatus.resultUrl
+      
+      if (pendingGenerationType === 'VIDEO') {
+        setResult({
+          video: resultUrl,
+          caption: null,
+          hashtags: [],
+          generationId: pendingGenerationId,
+        })
+        
+        // Generate caption if requested
+        if (pendingGenerateMetadata) {
+          generateCaptionAndHashtags(resultUrl, 'VIDEO', pendingPrompt).then(({ caption, hashtags }) => {
+            setResult(prev => ({ ...prev, caption, hashtags }))
+          })
+        }
+      } else if (pendingGenerationType === 'IMAGE') {
+        setResult({
+          image: resultUrl,
+          caption: null,
+          hashtags: [],
+          generationId: pendingGenerationId,
+        })
+        
+        // Generate caption if requested
+        if (pendingGenerateMetadata) {
+          generateCaptionAndHashtags(resultUrl, 'IMAGE', pendingPrompt).then(({ caption, hashtags }) => {
+            setResult(prev => ({ ...prev, caption, hashtags }))
+          })
+        }
+      } else if (pendingGenerationType === 'TEXT') {
+        const hashtags = extractHashtags(resultUrl)
+        setResult({
+          image: null,
+          caption: resultUrl,
+          hashtags,
+          generationId: pendingGenerationId,
+        })
+      }
+
+      // Clear pending state and refresh generations list
+      setPendingGenerationId(null)
+      setPendingGenerationType(null)
+      setIsGenerating(false)
+      setIsModalComplete(true)
+      refetchGenerations()
+      
+      // Clear template selection
+      setPrompt('')
+      setSelectedTemplate(null)
+    } else if (generationStatus.status === 'FAILED') {
+      // Generation failed
+      setError(generationStatus.metadata?.error as string || 'Generation failed')
+      setPendingGenerationId(null)
+      setPendingGenerationType(null)
+      setIsGenerating(false)
+    }
+  }, [generationStatus, pendingGenerationId, pendingGenerationType, pendingGenerateMetadata, pendingPrompt])
+
   const handleGenerate = async (data: {
     type: 'TEXT' | 'IMAGE' | 'VIDEO'
     prompt: string
@@ -106,76 +186,25 @@ export default function DashboardPage() {
     setIsGenerating(true)
     setIsModalComplete(false) // Reset modal completion state
     setReferenceUrl(data.referenceUrl || null)
-    generationTypeRef.current = data.type
+    setGenerationMode(data.type)
 
     try {
       advanceGenerationStep() // Start first step
       const responseData = await generateMutation.mutateAsync(data)
       advanceGenerationStep() // Move to next step
 
-      // Set result based on type
-      if (data.type === 'VIDEO') {
-        const videoResult = responseData.result
-        
-        // Generate caption and hashtags for video only if toggle is on
-        if (data.generateMetadata) {
-          const { caption, hashtags } = await generateCaptionAndHashtags(videoResult, 'VIDEO', data.prompt)
-          setResult({
-            video: videoResult,
-            caption,
-            hashtags,
-            generationId: responseData.generationId,
-          })
-        } else {
-          setResult({
-            video: videoResult,
-            caption: null,
-            hashtags: [],
-            generationId: responseData.generationId,
-          })
-        }
-      } else if (data.type === 'IMAGE') {
-        const imageResult = responseData.result
-        
-        // Generate caption and hashtags for image only if toggle is on
-        if (data.generateMetadata) {
-          const { caption, hashtags } = await generateCaptionAndHashtags(imageResult, 'IMAGE', data.prompt)
-          setResult({
-            image: imageResult,
-            caption,
-            hashtags,
-            generationId: responseData.generationId,
-          })
-        } else {
-          setResult({
-            image: imageResult,
-            caption: null,
-            hashtags: [],
-            generationId: responseData.generationId,
-          })
-        }
-      } else {
-        const caption = responseData.result
-        const hashtags = extractHashtags(caption)
-        setResult({
-          image: null,
-          caption,
-          hashtags,
-          generationId: responseData.generationId,
-        })
-      }
+      // The API now returns immediately with PENDING status
+      // Set pending state to trigger polling
+      setPendingGenerationId(responseData.generationId)
+      setPendingGenerationType(data.type)
+      setPendingGenerateMetadata(data.generateMetadata ?? false)
+      setPendingPrompt(data.prompt)
 
-      // Clear template selection after successful generation
-      setPrompt('')
-      setSelectedTemplate(null)
+      // The useEffect hook will handle polling for status updates
+      // and updating the result when generation completes
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Generation failed')
-    } finally {
       setIsGenerating(false)
-      // Set modal completion after a short delay to allow all steps to finish
-      setTimeout(() => {
-        setIsModalComplete(true)
-      }, 1000)
     }
   }
 
@@ -194,11 +223,6 @@ export default function DashboardPage() {
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
-  const extractHashtags = (text: string): string[] => {
-    const matches = text.match(/#\w+/g) || []
-    return matches.map((tag) => tag.replace('#', ''))
-  }
-
   const handleDownload = () => {
     const url = result.image || result.video
     if (url) {
@@ -215,7 +239,7 @@ export default function DashboardPage() {
       {/* Generation Loading Modal */}
       <GenerationLoadingModal 
         isOpen={isGenerating} 
-        mode={generationTypeRef.current}
+        mode={generationMode}
         hasReference={!!referenceUrl}
         isComplete={isModalComplete}
         onComplete={handleModalComplete}
@@ -321,7 +345,7 @@ export default function DashboardPage() {
             generationId={result.generationId}
             onDownload={handleDownload}
             isLoading={isGenerating}
-            loadingMode={generationTypeRef.current}
+            loadingMode={generationMode}
           />
         </div>
       </div>

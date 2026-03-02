@@ -37,6 +37,7 @@ export const queryKeys = {
   template: (id: string) => ['template', id] as const,
   generations: (filters?: { type?: string; limit?: number }) => ['generations', filters] as const,
   generation: (id: string) => ['generation', id] as const,
+  generationStatus: (id: string) => ['generation', id, 'status'] as const,
   userWallet: () => ['user', 'wallet'] as const,
 }
 
@@ -134,6 +135,31 @@ export function useGenerate() {
       queryClient.invalidateQueries({ queryKey: queryKeys.generations() })
       queryClient.invalidateQueries({ queryKey: queryKeys.userWallet() })
     },
+  })
+}
+
+// Generation Status Hook - polls for status updates
+export function useGenerationStatus(id: string | null, options?: { enabled?: boolean }) {
+  return useQuery({
+    queryKey: queryKeys.generationStatus(id || ''),
+    queryFn: async () => {
+      if (!id) return null
+      const res = await fetch(`/api/generate/status/${id}`)
+      if (!res.ok) throw new Error('Failed to fetch generation status')
+      return res.json() as Promise<Generation & { metadata?: Record<string, unknown> }>
+    },
+    enabled: !!id && (options?.enabled ?? true),
+    refetchInterval: (query) => {
+      const data = query.state.data
+      // Stop polling if completed or failed
+      if (data?.status === 'COMPLETED' || data?.status === 'FAILED') {
+        return false
+      }
+      // Poll every 2 seconds for PENDING/PROCESSING
+      return 2000
+    },
+    refetchIntervalInBackground: true,
+    staleTime: 0, // Always fetch fresh data
   })
 }
 

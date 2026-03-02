@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import { GenerationService } from '@/services/generation.service'
-import { AIService } from '@/services/ai.service'
+import { addGenerationJob, GenerationType, getJobPriority } from '@/lib/queue'
+import { startGenerationWorker } from '@/lib/worker'
 import { z } from 'zod'
 
 const generateSchema = z.object({
@@ -42,7 +43,7 @@ export async function POST(request: NextRequest) {
     // Create generation (deducts credits)
     const createResult = await GenerationService.createGeneration(
       session.user.id,
-      type as any,
+      type as GenerationType,
       prompt
     )
 
@@ -53,112 +54,44 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Process based on type
-    switch (type) {
-      case 'TEXT': {
-        const aiResult = await AIService.generateText({
-          prompt,
-          type: textType || 'caption',
+    // Ensure worker is running (for development / serverless environments)
+    // In production, the worker should be running as a separate process
+    try {
+      startGenerationWorker()
+    } catch (workerError) {
+      console.log('Worker already running or failed to start:', workerError)
+    }
+
+    // Add job to queue for background processing
+    await addGenerationJob(
+      {
+        generationId: createResult.generationId!,
+        userId: session.user.id,
+        type: type as GenerationType,
+        prompt,
+        options: {
+          textType,
           tone,
           language,
-        })
-
-        if (aiResult.success && aiResult.result) {
-          await GenerationService.completeGeneration(
-            createResult.generationId!,
-            aiResult.result,
-            aiResult.metadata
-          )
-          return NextResponse.json({
-            success: true,
-            generationId: createResult.generationId,
-            result: aiResult.result,
-            metadata: aiResult.metadata,
-          })
-        } else {
-          await GenerationService.failGeneration(createResult.generationId!, aiResult.error)
-          return NextResponse.json({ error: aiResult.error }, { status: 500 })
-        }
-      }
-
-      case 'IMAGE': {
-        const aiResult = await AIService.generateImage({
-          prompt,
-          style: imageStyle,
+          imageStyle,
           aspectRatio,
-          referenceImageUrl: referenceUrl,
-        })
-
-        if (aiResult.success && aiResult.result) {
-          await GenerationService.completeGeneration(
-            createResult.generationId!,
-            aiResult.result,
-            aiResult.metadata
-          )
-          return NextResponse.json({
-            success: true,
-            generationId: createResult.generationId,
-            result: aiResult.result,
-            metadata: aiResult.metadata,
-          })
-        } else {
-          await GenerationService.failGeneration(createResult.generationId!, aiResult.error)
-          return NextResponse.json({ error: aiResult.error }, { status: 500 })
-        }
-      }
-
-      case 'VIDEO': {
-        // Video generation is async - start processing and return pending
-        // In production, this would be handled by a job queue
-        const aiResult = await AIService.generateVideo({
-          prompt,
           duration,
-          referenceImageUrl: referenceUrl,
-        })
+          referenceUrl,
+        },
+      },
+      getJobPriority(session.user.plan)
+    )
 
-        if (aiResult.success && aiResult.result) {
-          await GenerationService.completeGeneration(
-            createResult.generationId!,
-            aiResult.result,
-            aiResult.metadata
-          )
-          return NextResponse.json({
-            success: true,
-            generationId: createResult.generationId,
-            result: aiResult.result,
-            metadata: aiResult.metadata,
-          })
-        } else {
-          await GenerationService.failGeneration(createResult.generationId!, aiResult.error)
-          return NextResponse.json({ error: aiResult.error }, { status: 500 })
-        }
-      }
-
-      case 'UPSCALE': {
-        // For upscale, prompt should be the image URL
-        const aiResult = await AIService.upscaleImage(prompt)
-
-        if (aiResult.success && aiResult.result) {
-          await GenerationService.completeGeneration(
-            createResult.generationId!,
-            aiResult.result,
-            aiResult.metadata
-          )
-          return NextResponse.json({
-            success: true,
-            generationId: createResult.generationId,
-            result: aiResult.result,
-            metadata: aiResult.metadata,
-          })
-        } else {
-          await GenerationService.failGeneration(createResult.generationId!, aiResult.error)
-          return NextResponse.json({ error: aiResult.error }, { status: 500 })
-        }
-      }
-
-      default:
-        return NextResponse.json({ error: 'Unknown generation type' }, { status: 400 })
-    }
+    // Return immediately with generation ID
+    // The client can poll for status or use WebSocket for updates
+    return NextResponse.json({
+      success: true,
+      generationId: createResult.generationId,
+      status: 'PENDING',
+      message: 'Generation job queued successfully',
+      // Provide a URL to check status
+      statusUrl: `/api/generate/status/${createResult.generationId}`,
+    })
   } catch (error) {
     console.error('Generation error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
