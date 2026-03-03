@@ -108,7 +108,7 @@ export default function TemplatesPage() {
             onClick={() => setActiveCategory(cat.value)}
             className={activeCategory === cat.value ? 'bg-primary hover:bg-primary/90' : ''}
           >
-                    <span className="mr-2">{cat.icon}</span>
+            <span className="mr-2">{cat.icon}</span>
             {cat.label}
           </Button>
         ))}

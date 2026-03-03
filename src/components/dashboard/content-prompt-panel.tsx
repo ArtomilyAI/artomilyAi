@@ -178,8 +178,8 @@ export function ContentPromptPanel({
           <div className="inline-flex p-1 bg-slate-100 dark:bg-slate-800 rounded-xl w-full">
             <button
               className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all ${mode === 'IMAGE'
-                  ? 'bg-white dark:bg-slate-700 shadow-sm text-slate-900 dark:text-white'
-                  : 'text-slate-400 hover:text-slate-600'
+                ? 'bg-white dark:bg-slate-700 shadow-sm text-slate-900 dark:text-white'
+                : 'text-slate-400 hover:text-slate-600'
                 }`}
               onClick={() => setInternalMode('IMAGE')}
             >
@@ -188,8 +188,8 @@ export function ContentPromptPanel({
             </button>
             <button
               className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all ${mode === 'VIDEO'
-                  ? 'bg-white dark:bg-slate-700 shadow-sm text-slate-900 dark:text-white'
-                  : 'text-slate-400 hover:text-slate-600'
+                ? 'bg-white dark:bg-slate-700 shadow-sm text-slate-900 dark:text-white'
+                : 'text-slate-400 hover:text-slate-600'
                 }`}
               onClick={() => setInternalMode('VIDEO')}
             >
@@ -198,8 +198,8 @@ export function ContentPromptPanel({
             </button>
             <button
               className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all ${mode === 'TEXT'
-                  ? 'bg-white dark:bg-slate-700 shadow-sm text-slate-900 dark:text-white'
-                  : 'text-slate-400 hover:text-slate-600'
+                ? 'bg-white dark:bg-slate-700 shadow-sm text-slate-900 dark:text-white'
+                : 'text-slate-400 hover:text-slate-600'
                 }`}
               onClick={() => setInternalMode('TEXT')}
             >

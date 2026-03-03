@@ -83,13 +83,12 @@ export function LibraryGrid({ generations, loading, onSelect }: LibraryGridProps
                 </Badge>
                 <Badge
                   variant="secondary"
-                  className={`text-xs border-0 ${
-                    gen.status === 'COMPLETED'
+                  className={`text-xs border-0 ${gen.status === 'COMPLETED'
                       ? 'bg-green-500/20 text-green-300'
                       : gen.status === 'FAILED'
-                      ? 'bg-red-500/20 text-red-300'
-                      : 'bg-yellow-500/20 text-yellow-300'
-                  }`}
+                        ? 'bg-red-500/20 text-red-300'
+                        : 'bg-yellow-500/20 text-yellow-300'
+                    }`}
                 >
                   {gen.status}
                 </Badge>
@@ -178,8 +177,8 @@ export function LibraryList({ generations, loading, onSelect }: LibraryGridProps
                   gen.status === 'COMPLETED'
                     ? 'default'
                     : gen.status === 'FAILED'
-                    ? 'destructive'
-                    : 'secondary'
+                      ? 'destructive'
+                      : 'secondary'
                 }
                 className="text-xs"
               >

@@ -496,10 +496,10 @@ Respond with only the copywriting content.`,
    */
   private static async pollVideoTask(taskId: string, apiKey: string, mode: string = 'text-to-video'): Promise<AIResult> {
     const maxAttempts = 120 // 10 minutes max (5s intervals)
-    
+
     for (let i = 0; i < maxAttempts; i++) {
       await this.simulateProcessing(5000)
-      
+
       try {
         // Poll video-synthesis task status
         const response = await fetch(`${ALIBABA_API_URL}/services/aigc/video-generation/video-synthesis/${taskId}`, {
@@ -512,7 +512,7 @@ Respond with only the copywriting content.`,
 
         const data = await response.json()
         console.log(`Video poll attempt ${i + 1}:`, data.output?.task_status)
-        
+
         const status = data.output?.task_status
 
         if (status === 'SUCCEEDED') {

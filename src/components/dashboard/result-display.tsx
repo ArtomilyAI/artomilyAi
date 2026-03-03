@@ -98,8 +98,8 @@ export function ResultDisplay({
         <div className="flex border-b border-slate-200 dark:border-slate-800">
           <button
             className={`flex-1 py-4 text-sm font-semibold flex items-center justify-center gap-2 transition-colors ${activeTab === 'result'
-                ? 'border-b-2 border-primary text-primary bg-primary/5'
-                : 'border-b-2 border-transparent text-slate-500 hover:text-slate-700'
+              ? 'border-b-2 border-primary text-primary bg-primary/5'
+              : 'border-b-2 border-transparent text-slate-500 hover:text-slate-700'
               }`}
             onClick={() => setActiveTab('result')}
           >
@@ -110,8 +110,8 @@ export function ResultDisplay({
           {!isTextMode && (
             <button
               className={`flex-1 py-4 text-sm font-semibold flex items-center justify-center gap-2 transition-colors ${activeTab === 'caption'
-                  ? 'border-b-2 border-primary text-primary bg-primary/5'
-                  : 'border-b-2 border-transparent text-slate-500 hover:text-slate-700'
+                ? 'border-b-2 border-primary text-primary bg-primary/5'
+                : 'border-b-2 border-transparent text-slate-500 hover:text-slate-700'
                 }`}
               onClick={() => setActiveTab('caption')}
             >
@@ -123,8 +123,8 @@ export function ResultDisplay({
           {!isTextMode && (
             <button
               className={`flex-1 py-4 text-sm font-semibold flex items-center justify-center gap-2 transition-colors ${activeTab === 'hashtags'
-                  ? 'border-b-2 border-primary text-primary bg-primary/5'
-                  : 'border-b-2 border-transparent text-slate-500 hover:text-slate-700'
+                ? 'border-b-2 border-primary text-primary bg-primary/5'
+                : 'border-b-2 border-transparent text-slate-500 hover:text-slate-700'
                 }`}
               onClick={() => setActiveTab('hashtags')}
             >

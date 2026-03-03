@@ -7,7 +7,6 @@ import {
   History,
   LayoutTemplate,
   Sparkles,
-  Gem,
 } from "lucide-react"
 
 import {
@@ -23,6 +22,8 @@ import {
   SidebarMenuItem,
   SidebarRail,
 } from "@/components/ui/sidebar"
+import { Progress } from "@/components/ui/progress"
+import { Button } from "@/components/ui/button"
 
 const navItems = [
   {
@@ -41,6 +42,8 @@ const navItems = [
     icon: LayoutTemplate,
   },
 ]
+
+const MAX_CREDITS = 20
 
 interface AppSidebarProps {
   balance: number
@@ -106,16 +109,32 @@ export function AppSidebar({ balance }: AppSidebarProps) {
 
       {/* Credit Balance in Footer */}
       <SidebarFooter className="px-3 pb-4">
-        <SidebarMenu>
+        <div className="rounded-xl bg-slate-900 dark:bg-slate-800 p-4 text-white flex flex-col gap-3 group-data-[collapsible=icon]:hidden">
+          <p className="text-xs text-slate-400">Credits Remaining</p>
+          <div className="flex justify-between items-end">
+            <p className="text-2xl font-bold">{balance.toLocaleString()}</p>
+            <p className="text-xs text-slate-400">of {MAX_CREDITS.toLocaleString()}</p>
+          </div>
+          <Progress
+            value={(balance / MAX_CREDITS) * 100}
+            className="h-1.5 bg-slate-700 [&>div]:bg-primary"
+          />
+          <Button
+            size="sm"
+            className="w-full text-white font-semibold"
+          >
+            Upgrade Credits
+          </Button>
+        </div>
+
+        {/* Collapsed state — icon only */}
+        <SidebarMenu className="group-data-[collapsible=icon]:flex hidden group-data-[collapsible=icon]:block">
           <SidebarMenuItem>
             <SidebarMenuButton
               tooltip={`${balance} Credits`}
-              className="h-10 bg-primary/5 border border-primary/15 hover:bg-primary/10 cursor-default"
+              className="h-10 bg-slate-900 dark:bg-slate-800 text-white hover:bg-slate-800 dark:hover:bg-slate-700"
             >
-              <Gem className="size-4 text-primary shrink-0" />
-              <span className="text-xs font-semibold text-primary">
-                {balance} Credits
-              </span>
+              <Sparkles className="size-4 text-primary shrink-0" />
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
