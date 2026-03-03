@@ -43,9 +43,9 @@ interface ContentPromptPanelProps {
 }
 
 const TEXT_TYPES = [
-  { value: 'caption', label: 'Caption', icon: '✍️' },
-  { value: 'script', label: 'Script', icon: '🎬' },
-  { value: 'copywriting', label: 'Copywriting', icon: '📝' },
+  { value: 'caption', label: 'Caption', icon: PenTool },
+  { value: 'script', label: 'Script', icon: Video },
+  { value: 'copywriting', label: 'Copywriting', icon: FileText },
 ] as const
 
 const ASPECT_RATIOS = [
@@ -306,7 +306,7 @@ export function ContentPromptPanel({
                   onClick={() => setTextType(t.value)}
                   className={textType === t.value ? 'bg-primary hover:bg-primary/90' : ''}
                 >
-                  <span className="mr-1">{t.icon}</span>
+                  <t.icon className="size-4 mr-1" />
                   {t.label}
                 </Button>
               ))}

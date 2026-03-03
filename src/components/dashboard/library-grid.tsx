@@ -2,6 +2,7 @@
 
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { FileText, Video, Search, FolderOpen } from 'lucide-react'
 
 interface Generation {
   id: string
@@ -37,7 +38,7 @@ export function LibraryGrid({ generations, loading, onSelect }: LibraryGridProps
   if (generations.length === 0) {
     return (
       <div className="text-center py-16">
-        <span className="text-6xl mb-4 block">📁</span>
+        <FolderOpen className="size-14 mx-auto mb-4 text-muted-foreground" />
         <p className="text-slate-400 font-medium">No generations yet</p>
         <p className="text-slate-500 text-sm mt-1">Create your first content to see it here</p>
       </div>
@@ -62,9 +63,13 @@ export function LibraryGrid({ generations, loading, onSelect }: LibraryGridProps
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-900">
-                <span className="text-4xl">
-                  {gen.type === 'TEXT' ? '📝' : gen.type === 'VIDEO' ? '🎬' : '🔍'}
-                </span>
+                {gen.type === 'TEXT' ? (
+                  <FileText className="size-10 text-muted-foreground" />
+                ) : gen.type === 'VIDEO' ? (
+                  <Video className="size-10 text-muted-foreground" />
+                ) : (
+                  <Search className="size-10 text-muted-foreground" />
+                )}
               </div>
             )}
           </div>
@@ -130,7 +135,7 @@ export function LibraryList({ generations, loading, onSelect }: LibraryGridProps
   if (generations.length === 0) {
     return (
       <div className="text-center py-16">
-        <span className="text-6xl mb-4 block">📁</span>
+        <FolderOpen className="size-14 mx-auto mb-4 text-muted-foreground" />
         <p className="text-slate-400 font-medium">No generations yet</p>
         <p className="text-slate-500 text-sm mt-1">Create your first content to see it here</p>
       </div>
@@ -151,9 +156,13 @@ export function LibraryList({ generations, loading, onSelect }: LibraryGridProps
               <img src={gen.resultUrl} alt="" className="w-full h-full object-cover" />
             ) : (
               <div className="w-full h-full flex items-center justify-center">
-                <span className="text-2xl">
-                  {gen.type === 'TEXT' ? '📝' : gen.type === 'VIDEO' ? '🎬' : '🔍'}
-                </span>
+                {gen.type === 'TEXT' ? (
+                  <FileText className="size-6 text-muted-foreground" />
+                ) : gen.type === 'VIDEO' ? (
+                  <Video className="size-6 text-muted-foreground" />
+                ) : (
+                  <Search className="size-6 text-muted-foreground" />
+                )}
               </div>
             )}
           </div>

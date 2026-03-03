@@ -414,7 +414,7 @@ export function ResultDisplay({
                   onClick={onDownload}
                   className="bg-white text-slate-900 hover:bg-slate-100"
                 >
-                  📥 Download
+                  <Download className="size-4 mr-1" /> Download
                 </Button>
                 {generationId && (
                   <Button
@@ -422,7 +422,7 @@ export function ResultDisplay({
                     variant="secondary"
                     className="bg-white/90"
                   >
-                    🔗 {copied === 'share' ? 'Copied!' : 'Share'}
+                    {copied === 'share' ? <><Check className="size-4 mr-1" /> Copied!</> : <><Share2 className="size-4 mr-1" /> Share</>}
                   </Button>
                 )}
               </div>

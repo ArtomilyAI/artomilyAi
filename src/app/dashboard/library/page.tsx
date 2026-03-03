@@ -12,6 +12,7 @@ import {
   useToggleGenerationPublic,
   type Generation
 } from '@/hooks/use-queries'
+import { FolderOpen } from 'lucide-react'
 
 export default function LibraryPage() {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
@@ -55,7 +56,9 @@ export default function LibraryPage() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">📁 My Library</h1>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <FolderOpen className="size-6 text-primary" /> My Library
+          </h1>
           <p className="text-slate-500 text-sm mt-1">
             {generations.length} generations
           </p>

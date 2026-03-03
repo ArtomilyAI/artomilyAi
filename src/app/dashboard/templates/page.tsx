@@ -9,17 +9,33 @@ import { Input } from '@/components/ui/input'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Textarea } from '@/components/ui/textarea'
 import { useTemplates, useTemplateUsage, type Template } from '@/hooks/use-queries'
+import {
+  Star,
+  Flame,
+  Smartphone,
+  Moon,
+  Gift,
+  Flag,
+  Briefcase,
+  Share2,
+  TrendingUp,
+  Sparkles,
+  FileText,
+  ImageIcon,
+  Video,
+  FolderOpen,
+} from 'lucide-react'
 
 const CATEGORIES = [
-  { value: 'all', label: 'All Templates', icon: '🌟' },
-  { value: 'TRENDING_MEME', label: 'Trending Memes', icon: '🔥' },
-  { value: 'VIRAL_TEMPLATE', label: 'Viral Templates', icon: '📱' },
-  { value: 'RAMADHAN', label: 'Ramadhan', icon: '🌙' },
-  { value: 'CHINESE_NEW_YEAR', label: 'Chinese New Year', icon: '🧧' },
-  { value: 'NATIONAL_DAY', label: 'National Day', icon: '🇮🇩' },
-  { value: 'BUSINESS', label: 'Business', icon: '💼' },
-  { value: 'SOCIAL_MEDIA', label: 'Social Media', icon: '📲' },
-  { value: 'MARKETING', label: 'Marketing', icon: '📈' },
+  { value: 'all', label: 'All Templates', icon: <Star className="size-4" /> },
+  { value: 'TRENDING_MEME', label: 'Trending Memes', icon: <Flame className="size-4" /> },
+  { value: 'VIRAL_TEMPLATE', label: 'Viral Templates', icon: <Smartphone className="size-4" /> },
+  { value: 'RAMADHAN', label: 'Ramadhan', icon: <Moon className="size-4" /> },
+  { value: 'CHINESE_NEW_YEAR', label: 'Chinese New Year', icon: <Gift className="size-4" /> },
+  { value: 'NATIONAL_DAY', label: 'National Day', icon: <Flag className="size-4" /> },
+  { value: 'BUSINESS', label: 'Business', icon: <Briefcase className="size-4" /> },
+  { value: 'SOCIAL_MEDIA', label: 'Social Media', icon: <Share2 className="size-4" /> },
+  { value: 'MARKETING', label: 'Marketing', icon: <TrendingUp className="size-4" /> },
 ] as const
 
 export default function TemplatesPage() {
@@ -64,7 +80,9 @@ export default function TemplatesPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">🎨 Template Hub</h1>
+        <h1 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+          <Sparkles className="size-6 text-primary" /> Template Hub
+        </h1>
         <p className="text-slate-500 text-sm mt-1">
           Choose from pre-made templates to generate content faster
         </p>
@@ -90,7 +108,7 @@ export default function TemplatesPage() {
             onClick={() => setActiveCategory(cat.value)}
             className={activeCategory === cat.value ? 'bg-primary hover:bg-primary/90' : ''}
           >
-            <span className="mr-1">{cat.icon}</span>
+                    <span className="mr-2">{cat.icon}</span>
             {cat.label}
           </Button>
         ))}
@@ -115,7 +133,7 @@ export default function TemplatesPage() {
         </div>
       ) : templates.length === 0 ? (
         <div className="text-center py-16">
-          <span className="text-6xl mb-4 block">📝</span>
+          <FolderOpen className="size-14 mx-auto mb-4 text-muted-foreground" />
           <p className="text-slate-400 font-medium">No templates found</p>
           <p className="text-slate-500 text-sm mt-1">Try a different category or search</p>
         </div>
@@ -137,9 +155,13 @@ export default function TemplatesPage() {
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">
-                    <span className="text-5xl opacity-50">
-                      {template.type === 'TEXT' ? '📝' : template.type === 'IMAGE' ? '🖼️' : '🎬'}
-                    </span>
+                    {template.type === 'TEXT' ? (
+                      <FileText className="size-12 text-muted-foreground/50" />
+                    ) : template.type === 'IMAGE' ? (
+                      <ImageIcon className="size-12 text-muted-foreground/50" />
+                    ) : (
+                      <Video className="size-12 text-muted-foreground/50" />
+                    )}
                   </div>
                 )}
 
@@ -251,7 +273,7 @@ export default function TemplatesPage() {
                     onClick={handleUseTemplate}
                     disabled={templateUsage.isPending}
                   >
-                    <span className="mr-2">✨</span>
+                    <Sparkles className="mr-2 size-4" />
                     Use This Template
                   </Button>
                   <Button variant="outline" onClick={() => setSelectedTemplate(null)}>

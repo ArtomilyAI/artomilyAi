@@ -60,9 +60,6 @@ export function Navbar() {
       <div className="flex items-center justify-between mx-auto max-w-7xl">
         <Link href="/" className="flex items-center gap-2">
           <div ref={logoRef} className="flex items-center gap-2">
-            {/* <div className="flex items-center justify-center size-8 rounded-lg bg-primary text-white">
-              <span className="text-lg">✨</span>
-            </div> */}
             <h2 className="text-slate-900 dark:text-white text-lg font-bold leading-tight tracking-tight">
               ArtomilyAI
             </h2>

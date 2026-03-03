@@ -4,6 +4,7 @@ import { useEffect, useRef } from 'react'
 import { gsap } from 'gsap'
 import ScrollTrigger from 'gsap/ScrollTrigger'
 import { Separator } from '@/components/ui/separator'
+import { Sparkles } from 'lucide-react'
 import Link from 'next/link'
 
 gsap.registerPlugin(ScrollTrigger)
@@ -60,7 +61,7 @@ export function Footer() {
           <div className="col-span-2 lg:col-span-2">
             <Link href="/" className="flex items-center gap-2 mb-4">
               <div className="flex items-center justify-center size-8 rounded-lg bg-primary text-white">
-                <span className="text-base">✨</span>
+                <Sparkles className="size-4" />
               </div>
               <h2 className="text-slate-900 dark:text-white text-lg font-bold">
                 ArtomilyAI

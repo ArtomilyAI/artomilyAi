@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { FileText, ImageIcon, Video, Search, Sparkles, Lightbulb, Download, Link2, Copy, Check, Loader2, Frown } from 'lucide-react'
 import Link from 'next/link'
 
 interface SharedGeneration {
@@ -23,10 +24,10 @@ interface SharedGeneration {
 }
 
 const TYPE_CONFIG = {
-  TEXT: { icon: '📝', label: 'Text', color: 'bg-blue-500' },
-  IMAGE: { icon: '🖼️', label: 'Image', color: 'bg-purple-500' },
-  VIDEO: { icon: '🎬', label: 'Video', color: 'bg-pink-500' },
-  UPSCALE: { icon: '🔍', label: 'Upscale', color: 'bg-green-500' },
+  TEXT: { icon: FileText, label: 'Text', color: 'bg-blue-500' },
+  IMAGE: { icon: ImageIcon, label: 'Image', color: 'bg-purple-500' },
+  VIDEO: { icon: Video, label: 'Video', color: 'bg-pink-500' },
+  UPSCALE: { icon: Search, label: 'Upscale', color: 'bg-green-500' },
 }
 
 export default function SharePage() {
@@ -71,7 +72,7 @@ export default function SharePage() {
     return (
       <div className="min-h-screen bg-[#f6f6f8] dark:bg-[#111421] flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin text-4xl mb-4">⏳</div>
+          <Loader2 className="size-10 mx-auto mb-4 animate-spin text-muted-foreground" />
           <p className="text-slate-500">Loading shared content...</p>
         </div>
       </div>
@@ -83,7 +84,7 @@ export default function SharePage() {
       <div className="min-h-screen bg-[#f6f6f8] dark:bg-[#111421] flex items-center justify-center">
         <Card className="max-w-md mx-4">
           <CardContent className="p-8 text-center">
-            <span className="text-5xl mb-4 block">😢</span>
+            <Frown className="size-12 mx-auto mb-4 text-muted-foreground" />
             <h1 className="text-xl font-bold text-slate-900 dark:text-white mb-2">
               Content Not Found
             </h1>
@@ -110,7 +111,7 @@ export default function SharePage() {
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-3">
             <div className="bg-primary p-1.5 rounded-lg text-white">
-              <span className="block text-lg">✨</span>
+              <Sparkles className="size-5" />
             </div>
             <h1 className="text-xl font-bold tracking-tight">ArtomilyAI</h1>
           </Link>
@@ -141,7 +142,7 @@ export default function SharePage() {
             </p>
           </div>
           <Badge className={`ml-auto ${typeConfig.color} text-white`}>
-            {typeConfig.icon} {typeConfig.label}
+            <typeConfig.icon className="size-3 mr-1" /> {typeConfig.label}
           </Badge>
         </div>
 
@@ -162,14 +163,14 @@ export default function SharePage() {
                     onClick={handleDownload}
                     className="bg-white text-slate-900 hover:bg-slate-100 shadow-lg"
                   >
-                    📥 Download
+                    <Download className="size-4 mr-1" /> Download
                   </Button>
                   <Button
                     onClick={handleCopyLink}
                     variant="secondary"
                     className="bg-white/90 backdrop-blur"
                   >
-                    {copied ? '✓ Copied!' : '🔗 Copy Link'}
+                    {copied ? <><Check className="size-4 mr-1" /> Copied!</> : <><Link2 className="size-4 mr-1" /> Copy Link</>}
                   </Button>
                 </div>
               </div>
@@ -188,7 +189,7 @@ export default function SharePage() {
                     variant="secondary"
                     className="bg-white/90 backdrop-blur"
                   >
-                    {copied ? '✓ Copied!' : '🔗 Copy Link'}
+                    {copied ? <><Check className="size-4 mr-1" /> Copied!</> : <><Link2 className="size-4 mr-1" /> Copy Link</>}
                   </Button>
                 </div>
               </div>
@@ -208,13 +209,13 @@ export default function SharePage() {
                     }}
                     variant="outline"
                   >
-                    📋 Copy Text
+                    <Copy className="size-4 mr-1" /> Copy Text
                   </Button>
                   <Button
                     onClick={handleCopyLink}
                     variant="outline"
                   >
-                    {copied ? '✓ Copied!' : '🔗 Copy Link'}
+                    {copied ? <><Check className="size-4 mr-1" /> Copied!</> : <><Link2 className="size-4 mr-1" /> Copy Link</>}
                   </Button>
                 </div>
               </div>
@@ -226,7 +227,7 @@ export default function SharePage() {
         <Card className="mt-6 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
           <CardContent className="p-6">
             <h3 className="text-sm font-bold text-slate-900 dark:text-white mb-2 flex items-center gap-2">
-              <span>💡</span> Prompt Used
+              <Lightbulb className="size-4 text-primary" /> Prompt Used
             </h3>
             <p className="text-slate-600 dark:text-slate-400 text-sm">
               {generation.prompt}
@@ -241,7 +242,7 @@ export default function SharePage() {
           </p>
           <Link href="/auth/register">
             <Button size="lg" className="bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20">
-              ✨ Get Started Free
+              <Sparkles className="size-4 mr-2" /> Get Started Free
             </Button>
           </Link>
         </div>

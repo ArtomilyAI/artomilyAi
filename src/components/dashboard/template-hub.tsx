@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { useTemplates, useTemplateUsage, type Template } from '@/hooks/use-queries'
-import { Flame, Moon, DollarSign, Building, Share2, Megaphone, Star } from 'lucide-react'
+import { Flame, Moon, Building, Share2, Megaphone, Star, FileText, ImageIcon, Video, FolderOpen, Loader2, Gift } from 'lucide-react'
 
 interface TemplateHubProps {
   onSelectTemplate: (template: Template) => void
@@ -16,7 +16,7 @@ const CATEGORIES = [
   { value: 'all', label: 'All', icon: <Star className="size-4" /> },
   { value: 'TRENDING_MEME', label: 'Trending', icon: <Flame className="size-4" /> },
   { value: 'RAMADHAN', label: 'Ramadhan', icon: <Moon className="size-4" /> },
-  { value: 'CHINESE_NEW_YEAR', label: 'CNY', icon: <DollarSign className="size-4" /> },
+  { value: 'CHINESE_NEW_YEAR', label: 'Chinese New Year', icon: <Gift className="size-4" /> },
   { value: 'BUSINESS', label: 'Business', icon: <Building className="size-4" /> },
   { value: 'SOCIAL_MEDIA', label: 'Social', icon: <Share2 className="size-4" /> },
   { value: 'MARKETING', label: 'Marketing', icon: <Megaphone className="size-4" /> },
@@ -68,7 +68,7 @@ export function TemplateHub({ onSelectTemplate, templates: externalTemplates }: 
       {/* Loading Overlay for filter changes */}
       {isFetching && !isLoading && (
         <div className="absolute inset-0 bg-white/50 dark:bg-slate-900/50 z-10 flex items-center justify-center rounded-xl">
-          <div className="animate-spin text-2xl">⏳</div>
+          <Loader2 className="size-6 animate-spin text-muted-foreground" />
         </div>
       )}
 
@@ -84,7 +84,7 @@ export function TemplateHub({ onSelectTemplate, templates: externalTemplates }: 
         </div>
       ) : filteredTemplates.length === 0 ? (
         <div className="text-center py-12">
-          <span className="text-4xl mb-3 block">📝</span>
+          <FolderOpen className="size-10 mx-auto mb-3 text-muted-foreground" />
           <p className="text-slate-400">No templates found</p>
         </div>
       ) : (
@@ -105,9 +105,13 @@ export function TemplateHub({ onSelectTemplate, templates: externalTemplates }: 
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">
-                    <span className="text-5xl opacity-50">
-                      {template.type === 'TEXT' ? '📝' : template.type === 'IMAGE' ? '🖼️' : '🎬'}
-                    </span>
+                    {template.type === 'TEXT' ? (
+                      <FileText className="size-12 text-muted-foreground/50" />
+                    ) : template.type === 'IMAGE' ? (
+                      <ImageIcon className="size-12 text-muted-foreground/50" />
+                    ) : (
+                      <Video className="size-12 text-muted-foreground/50" />
+                    )}
                   </div>
                 )}
 
