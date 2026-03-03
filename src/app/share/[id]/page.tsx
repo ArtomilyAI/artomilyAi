@@ -8,6 +8,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { FileText, ImageIcon, Video, Search, Sparkles, Lightbulb, Download, Link2, Copy, Check, Loader2, Frown } from 'lucide-react'
 import Link from 'next/link'
+import Image from 'next/image';
 
 interface SharedGeneration {
   id: string
@@ -21,13 +22,6 @@ interface SharedGeneration {
     name: string | null
     image: string | null
   }
-}
-
-const TYPE_CONFIG = {
-  TEXT: { icon: FileText, label: 'Text', color: 'bg-blue-500' },
-  IMAGE: { icon: ImageIcon, label: 'Image', color: 'bg-purple-500' },
-  VIDEO: { icon: Video, label: 'Video', color: 'bg-pink-500' },
-  UPSCALE: { icon: Search, label: 'Upscale', color: 'bg-green-500' },
 }
 
 export default function SharePage() {
@@ -102,17 +96,13 @@ export default function SharePage() {
     )
   }
 
-  const typeConfig = TYPE_CONFIG[generation.type]
-
   return (
     <div className="min-h-screen w-full bg-[#f6f6f8] dark:bg-[#111421]">
       {/* Header */}
       <header className="sticky top-0 z-50 w-full border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-[#111421]/80 backdrop-blur-md">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-3">
-            <div className="bg-primary p-1.5 rounded-lg text-white">
-              <Sparkles className="size-5" />
-            </div>
+            <Image src="/logo.svg" alt="BuatinAi Logo" width={32} height={32} className="size-8 rounded-lg" />
             <h1 className="text-xl font-bold tracking-tight">BuatinAi</h1>
           </Link>
           <Link href="/auth/register">
@@ -141,9 +131,6 @@ export default function SharePage() {
               Shared on {new Date(generation.createdAt).toLocaleDateString()}
             </p>
           </div>
-          <Badge className={`ml-auto ${typeConfig.color} text-white`}>
-            <typeConfig.icon className="size-3 mr-1" /> {typeConfig.label}
-          </Badge>
         </div>
 
         {/* Content Card */}
@@ -161,14 +148,15 @@ export default function SharePage() {
                 <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-3">
                   <Button
                     onClick={handleDownload}
-                    className="bg-white text-slate-900 hover:bg-slate-100 shadow-lg"
+                    variant="ghost"
+                    className="backdrop-blur"
                   >
                     <Download className="size-4 mr-1" /> Download
                   </Button>
                   <Button
                     onClick={handleCopyLink}
-                    variant="secondary"
-                    className="bg-white/90 backdrop-blur"
+                    variant="ghost"
+                    className="backdrop-blur"
                   >
                     {copied ? <><Check className="size-4 mr-1" /> Copied!</> : <><Link2 className="size-4 mr-1" /> Copy Link</>}
                   </Button>
@@ -186,8 +174,8 @@ export default function SharePage() {
                 <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-3">
                   <Button
                     onClick={handleCopyLink}
-                    variant="secondary"
-                    className="bg-white/90 backdrop-blur"
+                    variant="ghost"
+                    className="backdrop-blur"
                   >
                     {copied ? <><Check className="size-4 mr-1" /> Copied!</> : <><Link2 className="size-4 mr-1" /> Copy Link</>}
                   </Button>
@@ -207,13 +195,15 @@ export default function SharePage() {
                     onClick={() => {
                       navigator.clipboard.writeText(generation.resultUrl || '')
                     }}
-                    variant="outline"
+                    variant="ghost"
+                    className="backdrop-blur"
                   >
                     <Copy className="size-4 mr-1" /> Copy Text
                   </Button>
                   <Button
                     onClick={handleCopyLink}
-                    variant="outline"
+                    variant="ghost"
+                    className="backdrop-blur"
                   >
                     {copied ? <><Check className="size-4 mr-1" /> Copied!</> : <><Link2 className="size-4 mr-1" /> Copy Link</>}
                   </Button>

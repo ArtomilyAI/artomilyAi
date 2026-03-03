@@ -16,6 +16,9 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "BuatinAi - AI Content Generator",
   description: "AI generative platform for text, image, and video generation",
+  icons: {
+    icon: "/logo.svg",
+  },
 };
 
 export default function RootLayout({
