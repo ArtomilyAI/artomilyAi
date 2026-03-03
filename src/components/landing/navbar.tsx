@@ -5,6 +5,7 @@ import { gsap } from 'gsap'
 import { Button } from '@/components/ui/button'
 import { ThemeToggle } from '@/components/theme-toggle'
 import Link from 'next/link'
+import Image from 'next/image'
 
 const navLinks = [
   { href: '#features', label: 'Features' },
@@ -60,6 +61,7 @@ export function Navbar() {
       <div className="flex items-center justify-between mx-auto max-w-7xl">
         <Link href="/" className="flex items-center gap-2">
           <div ref={logoRef} className="flex items-center gap-2">
+            <Image src="/logo.svg" alt="BuatinAi Logo" width={32} height={32} className="size-8 rounded-lg" />
             <h2 className="text-slate-900 dark:text-white text-lg font-bold leading-tight tracking-tight">
               BuatinAi
             </h2>

@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import Image from "next/image"
 import { usePathname } from "next/navigation"
 import {
   LayoutDashboard,
@@ -60,12 +61,10 @@ export function AppSidebar({ balance }: AppSidebarProps) {
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild tooltip="BuatinAi">
               <Link href="/dashboard">
-                <div className="flex size-8 items-center justify-center rounded-lg bg-primary text-white">
-                  <Sparkles className="size-4" />
-                </div>
+                <Image src="/logo.svg" alt="BuatinAi Logo" width={32} height={32} className="size-8 rounded-lg" />
                 <div className="flex flex-col gap-0.5 leading-none">
                   <span className="font-bold text-base">BuatinAi</span>
-                  <span className="text-xs text-muted-foreground">AI Platform</span>
+                  <span className="text-xs text-muted-foreground">AI generative platform</span>
                 </div>
               </Link>
             </SidebarMenuButton>

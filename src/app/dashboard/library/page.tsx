@@ -66,7 +66,7 @@ export default function LibraryPage() {
 
         <div className="flex items-center gap-4">
           {/* Type Filter */}
-          <div className="flex gap-2">
+          <div className="grid gap-2 grid-cols-2 lg:grid-cols-4 items-start justify-start">
             {(['all', 'TEXT', 'IMAGE', 'VIDEO'] as const).map((type) => (
               <Button
                 key={type}

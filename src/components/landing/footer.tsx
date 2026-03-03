@@ -6,6 +6,7 @@ import ScrollTrigger from 'gsap/ScrollTrigger'
 import { Separator } from '@/components/ui/separator'
 import { Sparkles } from 'lucide-react'
 import Link from 'next/link'
+import Image from 'next/image'
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -60,9 +61,7 @@ export function Footer() {
         <div className="footer-content grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-8 mb-12">
           <div className="col-span-2 lg:col-span-2">
             <Link href="/" className="flex items-center gap-2 mb-4">
-              <div className="flex items-center justify-center size-8 rounded-lg bg-primary text-white">
-                <Sparkles className="size-4" />
-              </div>
+              <Image src="/logo.svg" alt="BuatinAi Logo" width={32} height={32} className="size-8 rounded-lg" />
               <h2 className="text-slate-900 dark:text-white text-lg font-bold">
                 BuatinAi
               </h2>
