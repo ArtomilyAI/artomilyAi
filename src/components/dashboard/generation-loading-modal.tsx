@@ -28,7 +28,7 @@ export function GenerationLoadingModal({ isOpen, mode, hasReference, isComplete 
   // Define steps based on mode
   const getSteps = (): Step[] => {
     const baseSteps: Step[] = []
-    
+
     if (mode === 'IMAGE') {
       if (hasReference) {
         baseSteps.push({ id: 'analyze', label: 'Analyzing Reference', description: 'Processing your image...', status: 'pending' })
@@ -76,7 +76,7 @@ export function GenerationLoadingModal({ isOpen, mode, hasReference, isComplete 
 
     const stepProgress = (currentStep / steps.length) * 100
     const targetProgress = stepProgress + (100 / steps.length) * 0.8 // Animate to 80% of current step
-    
+
     const interval = setInterval(() => {
       setProgress(prev => {
         if (prev < targetProgress) {
@@ -94,7 +94,7 @@ export function GenerationLoadingModal({ isOpen, mode, hasReference, isComplete 
     if (isComplete && isOpen) {
       // Set progress to 100%
       setProgress(100)
-      
+
       // Show completion state after a short delay
       const timer = setTimeout(() => {
         setShowCompletion(true)
@@ -122,7 +122,7 @@ export function GenerationLoadingModal({ isOpen, mode, hasReference, isComplete 
   // Expose advance function for parent component
   useEffect(() => {
     if (isOpen) {
-      ;(window as any).advanceGenerationStep = advanceStep
+      ; (window as any).advanceGenerationStep = advanceStep
     }
     return () => {
       delete (window as any).advanceGenerationStep
@@ -142,9 +142,9 @@ export function GenerationLoadingModal({ isOpen, mode, hasReference, isComplete 
   }
 
   const getModeIcon = () => {
-    if (mode === 'IMAGE') return <Image className="size-6" />
-    if (mode === 'VIDEO') return <Video className="size-6" />
-    return <FileText className="size-6" />
+    if (mode === 'IMAGE') return <Image className="size-6 text-primary" />
+    if (mode === 'VIDEO') return <Video className="size-6 text-primary" />
+    return <FileText className="size-6 text-primary" />
   }
 
   const getModeTitle = () => {
@@ -154,35 +154,35 @@ export function GenerationLoadingModal({ isOpen, mode, hasReference, isComplete 
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={() => {}}>
-      <DialogContent className="sm:max-w-md p-0 overflow-hidden border-0 bg-transparent shadow-none">
-        <div className="bg-gradient-to-br from-[#506ced] to-[#7c3aed] rounded-2xl p-6 shadow-2xl">
+    <Dialog open={isOpen} onOpenChange={() => { }}>
+      <DialogContent className="sm:max-w-md p-0 overflow-hidden border-0 bg-transparent shadow-none [&>button]:hidden">
+        <div className="bg-card dark:bg-card border border-border rounded-2xl p-6 shadow-2xl">
           {/* Header */}
           <div className="text-center mb-6">
-            <div className="inline-flex items-center justify-center size-16 rounded-full bg-white/20 mb-4 animate-pulse">
+            <div className="inline-flex items-center justify-center size-16 rounded-full bg-primary/10 dark:bg-primary/20 mb-4 animate-pulse">
               {showCompletion ? (
-                <Trophy className="size-8 text-white" />
+                <Trophy className="size-8 text-primary" />
               ) : (
                 getModeIcon()
               )}
             </div>
-            <h2 className="text-xl font-bold text-white mb-1">
+            <h2 className="text-xl font-bold text-foreground mb-1">
               {showCompletion ? 'Generation Complete!' : getModeTitle()}
             </h2>
-            <p className="text-white/70 text-sm">
+            <p className="text-muted-foreground text-sm">
               {showCompletion ? 'Ready to view your content' : `Estimated time: ${getEstimatedTime()}`}
             </p>
           </div>
 
           {/* Progress Bar */}
           <div className="mb-6">
-            <div className="flex justify-between text-xs text-white/70 mb-2">
+            <div className="flex justify-between text-xs text-muted-foreground mb-2">
               <span>Progress</span>
               <span>{Math.round(progress)}%</span>
             </div>
-            <div className="h-2 bg-white/20 rounded-full overflow-hidden">
-              <div 
-                className="h-full bg-white rounded-full transition-all duration-300"
+            <div className="h-2 bg-muted rounded-full overflow-hidden">
+              <div
+                className="h-full bg-primary rounded-full transition-all duration-300"
                 style={{ width: `${progress}%` }}
               />
             </div>
@@ -194,43 +194,39 @@ export function GenerationLoadingModal({ isOpen, mode, hasReference, isComplete 
               {steps.map((step, index) => (
                 <div
                   key={step.id}
-                  className={`flex items-center gap-3 p-3 rounded-xl transition-all duration-300 ${
-                    index < currentStep
-                      ? 'bg-white/20'
+                  className={`flex items-center gap-3 p-3 rounded-xl transition-all duration-300 ${index < currentStep
+                      ? 'bg-primary/5 dark:bg-primary/10'
                       : index === currentStep
-                      ? 'bg-white/30 ring-2 ring-white/50'
-                      : 'bg-white/5'
-                  }`}
+                        ? 'bg-primary/10 dark:bg-primary/15 ring-2 ring-primary/30'
+                        : 'bg-muted/50'
+                    }`}
                 >
-                  <div className={`size-8 rounded-full flex items-center justify-center ${
-                    index < currentStep
-                      ? 'bg-green-400 text-white'
+                  <div className={`size-8 rounded-full flex items-center justify-center shrink-0 ${index < currentStep
+                      ? 'bg-green-500 dark:bg-green-600 text-white'
                       : index === currentStep
-                      ? 'bg-white text-[#506ced] animate-pulse'
-                      : 'bg-white/20 text-white/50'
-                  }`}>
+                        ? 'bg-primary text-primary-foreground animate-pulse'
+                        : 'bg-muted text-muted-foreground'
+                    }`}>
                     {index < currentStep ? (
                       <Check className="size-4" />
                     ) : index === currentStep ? (
-                      <div className="size-4 border-2 border-[#506ced] border-t-transparent rounded-full animate-spin" />
+                      <div className="size-4 border-2 border-primary-foreground border-t-transparent rounded-full animate-spin" />
                     ) : (
                       <span className="text-xs">{index + 1}</span>
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className={`text-sm font-semibold ${
-                      index <= currentStep ? 'text-white' : 'text-white/50'
-                    }`}>
+                    <p className={`text-sm font-semibold ${index <= currentStep ? 'text-foreground' : 'text-muted-foreground'
+                      }`}>
                       {step.label}
                     </p>
-                    <p className={`text-xs truncate ${
-                      index === currentStep ? 'text-white/80' : 'text-white/40'
-                    }`}>
+                    <p className={`text-xs truncate ${index === currentStep ? 'text-muted-foreground' : 'text-muted-foreground/60'
+                      }`}>
                       {step.description}
                     </p>
                   </div>
                   {index === currentStep && (
-                    <div className="flex items-center gap-1 text-white/60">
+                    <div className="flex items-center gap-1 text-muted-foreground">
                       <Timer className="size-3" />
                       <span className="text-xs font-mono">{formatTime(elapsedTime)}</span>
                     </div>
@@ -243,19 +239,19 @@ export function GenerationLoadingModal({ isOpen, mode, hasReference, isComplete 
           {/* Completion Message */}
           {showCompletion && (
             <div className="flex flex-col items-center justify-center py-6">
-              <div className="size-16 rounded-full bg-green-400/20 flex items-center justify-center mb-4">
-                <PartyPopper className="size-8 text-white" />
+              <div className="size-16 rounded-full bg-green-500/10 dark:bg-green-500/20 flex items-center justify-center mb-4">
+                <PartyPopper className="size-8 text-green-500 dark:text-green-400" />
               </div>
-              <p className="text-white text-center mb-2">Your content has been generated successfully!</p>
-              <p className="text-white/70 text-sm text-center">Preparing to show your results...</p>
+              <p className="text-foreground text-center mb-2">Your content has been generated successfully!</p>
+              <p className="text-muted-foreground text-sm text-center">Preparing to show your results...</p>
             </div>
           )}
 
           {/* Tips - only show when not in completion state */}
           {!showCompletion && (
-            <div className="mt-6 p-3 bg-white/10 rounded-xl">
-              <p className="text-xs text-white/70 text-center flex items-center justify-center gap-1">
-                <Sparkles className="size-3" /> <span className="text-white/90">Tip:</span> {getTip(mode)}
+            <div className="mt-6 p-3 bg-muted/50 border border-border rounded-xl">
+              <p className="text-xs text-muted-foreground text-center flex items-center justify-center gap-1">
+                <Sparkles className="size-3 text-primary" />{getTip(mode)}
               </p>
             </div>
           )}
@@ -283,7 +279,7 @@ function getTip(mode: 'TEXT' | 'IMAGE' | 'VIDEO'): string {
       'Mention the platform (Instagram, TikTok) for optimized content.'
     ]
   }
-  
+
   const modeTips = tips[mode]
   return modeTips[Math.floor(Math.random() * modeTips.length)]
 }
@@ -291,6 +287,6 @@ function getTip(mode: 'TEXT' | 'IMAGE' | 'VIDEO'): string {
 // Export function to control steps from outside
 export function advanceGenerationStep() {
   if ((window as any).advanceGenerationStep) {
-    ;(window as any).advanceGenerationStep()
+    ; (window as any).advanceGenerationStep()
   }
 }
