@@ -58,13 +58,13 @@ export function AppSidebar({ balance }: AppSidebarProps) {
       <SidebarHeader className="px-3 py-4">
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton size="lg" asChild tooltip="ArtomilyAI">
+            <SidebarMenuButton size="lg" asChild tooltip="BuatinAi">
               <Link href="/dashboard">
                 <div className="flex size-8 items-center justify-center rounded-lg bg-primary text-white">
                   <Sparkles className="size-4" />
                 </div>
                 <div className="flex flex-col gap-0.5 leading-none">
-                  <span className="font-bold text-base">ArtomilyAI</span>
+                  <span className="font-bold text-base">BuatinAi</span>
                   <span className="text-xs text-muted-foreground">AI Platform</span>
                 </div>
               </Link>
@@ -92,7 +92,7 @@ export function AppSidebar({ balance }: AppSidebarProps) {
                       asChild
                       isActive={isActive}
                       tooltip={item.title}
-                      className={isActive ? "bg-primary/10 text-primary hover:bg-primary/15 hover:text-primary" : ""}
+                      className={isActive ? "data-[active=true]:bg-primary/10 data-[active=true]:text-primary hover:bg-primary/15 hover:text-primary" : ""}
                     >
                       <Link href={item.href}>
                         <item.icon className="size-4" />

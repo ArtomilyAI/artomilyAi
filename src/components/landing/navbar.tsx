@@ -61,7 +61,7 @@ export function Navbar() {
         <Link href="/" className="flex items-center gap-2">
           <div ref={logoRef} className="flex items-center gap-2">
             <h2 className="text-slate-900 dark:text-white text-lg font-bold leading-tight tracking-tight">
-              ArtomilyAI
+              BuatinAi
             </h2>
           </div>
         </Link>

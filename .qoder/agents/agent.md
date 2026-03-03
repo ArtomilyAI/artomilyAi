@@ -1,19 +1,22 @@
 # AGENT.md
 
 ## Project Name
-ArtomilyAI – AI Content Generator
+
+BuatinAi – AI Content Generator
 
 ---
 
 ## 1. Product Overview
 
-ArtomilyAI adalah AI generative platform berbasis:
+BuatinAi adalah AI generative platform berbasis:
+
 - Text generation
 - Image generation
 - Video generation
 - template system (Ramadhan, Imlek, Meme, dll)
 
 Target:
+
 - Creator
 - UMKM
 - Brand lokal
@@ -24,11 +27,13 @@ Target:
 ## 2. Core Features
 
 ### A. AI Generation
+
 - Text (caption, script, post)
 - Image (flyer, meme, poster)
 - Video (animation from image)
 
 ### B. Templates
+
 - Ramadhan
 - Lunar New Year
 - Trending Meme
@@ -36,7 +41,9 @@ Target:
 - Template AI Viral
 
 ### C. Personalization
+
 User memiliki:
+
 - Writing style
 - Tone
 - Color dominance
@@ -47,6 +54,7 @@ User memiliki:
 ## 3. Tech Stack
 
 ### Frontend
+
 - Next.js (App Router)
 - TailwindCSS
 - shadcn/ui
@@ -56,6 +64,7 @@ User memiliki:
 - Zustand
 
 ### Backend
+
 - Next.js API Routes
 - BullMQ
 - Redis
@@ -72,6 +81,7 @@ Client → Next.js API → Queue → Worker → AI → Storage → DB
 ## 5. Folder Structure
 
 apps/web
+
 - app/
 - components/
 - lib/

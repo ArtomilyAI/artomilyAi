@@ -113,7 +113,7 @@ export default function SharePage() {
             <div className="bg-primary p-1.5 rounded-lg text-white">
               <Sparkles className="size-5" />
             </div>
-            <h1 className="text-xl font-bold tracking-tight">ArtomilyAI</h1>
+            <h1 className="text-xl font-bold tracking-tight">BuatinAi</h1>
           </Link>
           <Link href="/auth/register">
             <Button className="bg-primary hover:bg-primary/90">
@@ -238,7 +238,7 @@ export default function SharePage() {
         {/* CTA */}
         <div className="mt-8 text-center">
           <p className="text-slate-500 mb-4">
-            Create your own AI-generated content with ArtomilyAI
+            Create your own AI-generated content with BuatinAi
           </p>
           <Link href="/auth/register">
             <Button size="lg" className="bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20">

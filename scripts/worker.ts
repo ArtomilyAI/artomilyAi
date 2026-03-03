@@ -17,7 +17,7 @@ import { closeQueue } from '@/lib/queue'
 import { closeRedisConnection } from '@/lib/redis'
 
 console.log('========================================')
-console.log('  ArtomilyAI Generation Worker')
+console.log('  BuatinAi Generation Worker')
 console.log('========================================')
 console.log('')
 

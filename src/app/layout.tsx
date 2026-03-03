@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "ArtomilyAI - AI Content Generator",
+  title: "BuatinAi - AI Content Generator",
   description: "AI generative platform for text, image, and video generation",
 };
 
@@ -26,7 +26,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased w-screen h-screen`}
+        className={`${geistSans.variable} ${geistMono.variable} max-w-screen h-full`}
       >
         <Providers>{children}</Providers>
       </body>

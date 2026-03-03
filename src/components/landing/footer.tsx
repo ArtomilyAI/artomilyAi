@@ -64,7 +64,7 @@ export function Footer() {
                 <Sparkles className="size-4" />
               </div>
               <h2 className="text-slate-900 dark:text-white text-lg font-bold">
-                ArtomilyAI
+                BuatinAi
               </h2>
             </Link>
             <p className="text-slate-500 dark:text-slate-400 text-sm mb-6 max-w-xs">
@@ -164,7 +164,7 @@ export function Footer() {
 
         <div className="flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-slate-500 dark:text-slate-500 text-sm">
-            © 2025 ArtomilyAI. All rights reserved.
+            © 2025 BuatinAi. All rights reserved.
           </p>
           <div className="flex gap-6 text-sm text-slate-500 dark:text-slate-500">
             <Link href="#" className="hover:text-slate-900 dark:hover:text-slate-300">

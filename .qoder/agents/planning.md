@@ -1,8 +1,8 @@
-# ArtomilyAI – Master Planning Document
+# BuatinAi – Master Planning Document
 
 ## 0. Vision
 
-ArtomilyAI adalah AI-powered content generation platform
+BuatinAi adalah AI-powered content generation platform
 yang memungkinkan user membuat:
 
 - Text (caption, script, copywriting)
@@ -11,6 +11,7 @@ yang memungkinkan user membuat:
 - Tempaltes (Ramadhan, Imlek, National Day, Trending Meme, Viral Template)
 
 Monetisasi berbasis:
+
 - Subscription
 - Credit usage (balance system)
 - Top-up credit
@@ -20,6 +21,7 @@ Monetisasi berbasis:
 # 1. Product Phases Roadmap
 
 ## Phase 1 – Landing & Validation
+
 Goal: Validate demand
 
 - Landing page
@@ -30,6 +32,7 @@ Goal: Validate demand
 - Static demo content
 
 Deliverable:
+
 - Public landing page
 - Waitlist collection
 
@@ -40,6 +43,7 @@ Deliverable:
 Goal: Launch working generator
 
 Features:
+
 - Auth system
 - Wallet balance system
 - Generate text/image
@@ -49,6 +53,7 @@ Features:
 - Stripe subscription integration
 
 Deliverable:
+
 - Working AI generation
 - Credit-safe system
 - Basic dashboard
@@ -60,6 +65,7 @@ Deliverable:
 Goal: Increase retention & growth
 
 Features:
+
 - Public portfolio (/u/username)
 - Toggle public/private
 - Template system
@@ -68,6 +74,7 @@ Features:
 - Usage analytics
 
 Deliverable:
+
 - Viral loop via portfolio sharing
 - Revenue stabilization
 
@@ -78,6 +85,7 @@ Deliverable:
 Goal: Sustainable AI cost structure
 
 Features:
+
 - Dynamic cost engine
 - Token-based billing
 - Queue tiering
@@ -86,6 +94,7 @@ Features:
 - AI provider fallback
 
 Deliverable:
+
 - Controlled margin
 - Scalable infra
 
@@ -109,6 +118,7 @@ Core Systems:
 # 3. Tech Stack
 
 ## Frontend
+
 - Next.js (App Router)
 - TailwindCSS
 - shadcn/ui
@@ -118,6 +128,7 @@ Core Systems:
 - Zod
 
 ## Backend
+
 - Next.js API Routes
 - PostgreSQL
 - Prisma ORM
@@ -126,6 +137,7 @@ Core Systems:
 - Stripe
 
 ## Storage
+
 - AWS S3 (or compatible object storage)
 
 ---
@@ -136,14 +148,15 @@ Core Systems:
 
 Each action consumes credit:
 
-| Action | Cost |
-|--------|------|
-| Text | 1 |
-| Image | 5 |
-| Video | 20 |
-| Upscale | 3 |
+| Action  | Cost |
+| ------- | ---- |
+| Text    | 1    |
+| Image   | 5    |
+| Video   | 20   |
+| Upscale | 3    |
 
 Rules:
+
 - Deduct before queue
 - Refund if failed
 - Lock credit during processing
@@ -153,22 +166,26 @@ Rules:
 ## 4.2 Subscription Plans
 
 Free
+
 - 20 credits/month
 - Watermark
 - No public portfolio
 
 Creator ($29/mo)
+
 - 300 credits
 - No watermark
 - Public portfolio
 - Priority queue
 
 Pro Brand ($79/mo)
+
 - 1000 credits
 - Faster processing
 - Brand memory
 
 Renewal Flow:
+
 - Stripe webhook
 - Add monthly credits
 - Update expiry
@@ -191,6 +208,7 @@ Renewal Flow:
 # 6. Database Structure
 
 ## users
+
 - id
 - email
 - username
@@ -202,6 +220,7 @@ Renewal Flow:
 - created_at
 
 ## generations
+
 - id
 - user_id
 - type
@@ -213,6 +232,7 @@ Renewal Flow:
 - created_at
 
 ## transactions
+
 - id
 - user_id
 - type
@@ -221,6 +241,7 @@ Renewal Flow:
 - created_at
 
 ## subscriptions
+
 - id
 - user_id
 - stripe_subscription_id
@@ -234,11 +255,12 @@ Renewal Flow:
 Two-tier queue:
 
 Free → Standard queue  
-Pro → Priority queue  
+Pro → Priority queue
 
 Worker pools separated.
 
 Safety:
+
 - Retry limit
 - Timeout
 - Max concurrent jobs per user
@@ -249,15 +271,18 @@ Safety:
 # 8. Portfolio System
 
 Private Library:
+
 - All generations stored
 
 Public Portfolio:
+
 - Toggle is_public
 - URL: /u/username
 - Grid gallery
 - Shareable
 
 Future:
+
 - Like system
 - Creator ranking
 - Marketplace template
@@ -308,18 +333,22 @@ Admin can:
 # 12. Scaling Strategy
 
 Stage 1:
+
 - Single app + Redis
 
 Stage 2:
+
 - Separate worker service
 
 Stage 3:
+
 - Microservices:
   - Auth Service
   - Credit Service
   - Generation Service
 
 Stage 4:
+
 - Multi-region deployment
 - CDN for media
 
@@ -373,6 +402,7 @@ Into:
 AI Cultural Content Infrastructure Platform
 
 Core asset:
+
 - Cultural template engine
 - Brand voice personalization
 - Creator ecosystem
@@ -382,7 +412,7 @@ Core asset:
 
 # Final Summary
 
-ArtomilyAI is designed as:
+BuatinAi is designed as:
 
 - Credit-controlled AI SaaS
 - Subscription-based platform

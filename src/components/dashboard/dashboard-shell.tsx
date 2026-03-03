@@ -28,7 +28,7 @@ export function DashboardShell({ children, balance, user }: DashboardShellProps)
           <footer className="px-4 sm:px-6 py-8 border-t border-border">
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
               <div className="flex items-center gap-2 text-muted-foreground">
-                <span className="text-xs">© 2025 ArtomilyAI. All rights reserved.</span>
+                <span className="text-xs">© 2025 BuatinAi. All rights reserved.</span>
               </div>
               <div className="flex items-center gap-6">
                 <a className="text-xs text-muted-foreground hover:text-primary transition-colors" href="#">Privacy</a>
