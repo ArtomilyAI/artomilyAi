@@ -93,6 +93,14 @@ export function LibraryGrid({ generations, loading, onSelect }: LibraryGridProps
             </div>
           </div>
 
+          {gen.isPublic && (
+            <div className="absolute top-2 left-2">
+              <Badge variant="secondary" className="text-xs bg-">
+                Public
+              </Badge>
+            </div>
+          )}
+
           {/* Status indicator */}
           {gen.status === 'PENDING' && (
             <div className="absolute top-2 right-2">
