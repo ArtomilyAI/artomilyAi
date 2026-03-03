@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import Link from 'next/link'
+import { Zap } from 'lucide-react'
 
 export function HeroSection() {
   const sectionRef = useRef<HTMLDivElement>(null)
@@ -96,22 +97,15 @@ export function HeroSection() {
           <div className="flex flex-col gap-4">
             <Badge
               variant="secondary"
-              className="hero-badge w-fit mx-auto lg:mx-0 gap-2 bg-[#506ced]/10 text-[#506ced] border-[#506ced]/20 hover:bg-[#506ced]/15 px-3 py-1"
+              className="hero-badge w-fit mx-auto lg:mx-0 gap-2 bg-primary/10 text-primary border-primary/20 hover:bg-primary/15 px-3 py-1"
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="currentColor"
-                className="size-4"
-              >
-                <path d="M12 2L4 5v6.09c0 5.05 3.41 9.76 8 10.91 4.59-1.15 8-5.86 8-10.91V5l-8-3zm-1 15h2v-2h-2v2zm0-4h2V7h-2v6z" />
-              </svg>
-              New Version 2.0 is Live
+              <Zap className="size-4" />
+              Qwen & Wan Powered
             </Badge>
 
             <h1 className="hero-title text-slate-900 dark:text-white text-4xl md:text-5xl lg:text-6xl font-black leading-[1.1] tracking-tight">
               Create Cultural Content in{' '}
-              <span className="text-[#506ced]">Seconds</span>
+              <span className="text-primary">Seconds</span>
             </h1>
 
             <p className="hero-description text-slate-600 dark:text-slate-400 text-lg md:text-xl font-normal leading-relaxed max-w-[600px] mx-auto lg:mx-0">
@@ -125,7 +119,7 @@ export function HeroSection() {
             <Link href="/auth/register">
               <Button
                 size="lg"
-                className="hero-button h-12 px-6 text-base shadow-lg shadow-[#506ced]/20 transition-all hover:scale-105 bg-[#506ced] hover:bg-[#506ced]/90"
+                className="hero-button h-12 px-6 text-base shadow-lg shadow-primary/20 transition-all hover:scale-105 bg-primary hover:bg-primary/90"
               >
                 Start Creating for Free
               </Button>
@@ -172,16 +166,16 @@ export function HeroSection() {
         </div>
 
         <div className="hero-image flex-1 w-full relative">
-          <div className="hero-gradient absolute -top-10 -right-10 w-2/3 h-2/3 bg-gradient-to-br from-[#506ced]/30 to-emerald-400/30 rounded-full blur-3xl opacity-50 pointer-events-none" />
+          <div className="hero-gradient absolute -top-10 -right-10 w-2/3 h-2/3 bg-gradient-to-br from-primary/30 to-emerald-400/30 rounded-full blur-3xl opacity-50 pointer-events-none" />
           <div className="relative w-full aspect-[4/3] rounded-2xl overflow-hidden shadow-2xl border border-slate-100 dark:border-slate-700 bg-slate-100 dark:bg-slate-800">
             <div className="w-full h-full bg-gradient-to-br from-slate-200 to-slate-300 dark:from-slate-700 dark:to-slate-800 flex items-center justify-center">
               <div className="text-center p-8">
-                <div className="size-16 mx-auto mb-4 rounded-full bg-[#506ced]/20 flex items-center justify-center">
+                <div className="size-16 mx-auto mb-4 rounded-full bg-primary/20 flex items-center justify-center">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     viewBox="0 0 24 24"
                     fill="currentColor"
-                    className="size-8 text-[#506ced]"
+                    className="size-8 text-primary"
                   >
                     <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z" />
                   </svg>

@@ -24,14 +24,14 @@ const CATEGORIES = [
 
 export function TemplateHub({ onSelectTemplate, templates: externalTemplates }: TemplateHubProps) {
   const [activeCategory, setActiveCategory] = useState<string>('all')
-  
+
   // Use TanStack Query only if external templates not provided
   const { data, isLoading, isFetching } = useTemplates(
     externalTemplates ? undefined : { category: activeCategory, limit: 12 }
   )
-  
+
   const templateUsage = useTemplateUsage()
-  
+
   // Use external templates if provided, otherwise use query data
   const templates = externalTemplates ?? data?.templates ?? []
   const loading = externalTemplates ? false : isLoading || isFetching
@@ -57,7 +57,7 @@ export function TemplateHub({ onSelectTemplate, templates: externalTemplates }: 
             variant={activeCategory === cat.value ? 'default' : 'outline'}
             size="sm"
             onClick={() => setActiveCategory(cat.value)}
-            className={activeCategory === cat.value ? 'bg-[#506ced] hover:bg-[#506ced]/90' : 'flex-shrink-0'}
+            className={activeCategory === cat.value ? 'bg-primary hover:bg-primary/90' : 'flex-shrink-0'}
           >
             <span className="mr-1">{cat.icon}</span>
             {cat.label}
@@ -92,11 +92,11 @@ export function TemplateHub({ onSelectTemplate, templates: externalTemplates }: 
           {filteredTemplates.map((template: Template) => (
             <Card
               key={template.id}
-              className="group cursor-pointer hover:ring-2 hover:ring-[#506ced]/50 transition-all overflow-hidden bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800"
+              className="group cursor-pointer hover:ring-2 hover:ring-primary/50 transition-all overflow-hidden bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800"
               onClick={() => handleSelectTemplate(template)}
             >
               {/* Thumbnail */}
-              <div className="aspect-[4/5] relative overflow-hidden bg-gradient-to-br from-[#506ced]/10 to-pink-500/10">
+              <div className="aspect-[4/5] relative overflow-hidden bg-gradient-to-br from-primary/10 to-pink-500/10">
                 {template.thumbnail ? (
                   <img
                     src={template.thumbnail}
@@ -110,16 +110,16 @@ export function TemplateHub({ onSelectTemplate, templates: externalTemplates }: 
                     </span>
                   </div>
                 )}
-                
+
                 {/* Overlay on hover */}
-                <div className="absolute inset-0 bg-[#506ced]/80 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                <div className="absolute inset-0 bg-primary/80 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                   <span className="text-white font-semibold text-sm">Use Template</span>
                 </div>
               </div>
 
               <CardContent className="p-3">
                 <div className="flex items-center gap-2 mb-1">
-                  <Badge variant="secondary" className="text-xs bg-[#506ced]/10 text-[#506ced] border-0">
+                  <Badge variant="secondary" className="text-xs bg-primary/10 text-primary border-0">
                     {template.type}
                   </Badge>
                   <span className="text-xs text-slate-400 ml-auto">

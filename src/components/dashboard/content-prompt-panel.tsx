@@ -7,13 +7,13 @@ import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Switch } from '@/components/ui/switch'
-import { 
-  Image, 
-  Video, 
-  FileText, 
-  Sparkles, 
-  Upload, 
-  X, 
+import {
+  Image,
+  Video,
+  FileText,
+  Sparkles,
+  Upload,
+  X,
   Clock,
   Zap,
   Type,
@@ -56,7 +56,7 @@ const ASPECT_RATIOS = [
 ] as const
 
 const IMAGE_STYLES = [
-  'Cinematic', 'Anime', 'Realistic', 'Oil Painting', 
+  'Cinematic', 'Anime', 'Realistic', 'Oil Painting',
   'Watercolor', 'Digital Art', '3D Render', 'Minimalist'
 ]
 
@@ -73,9 +73,9 @@ const CREDIT_COSTS = {
   METADATA: 1, // Caption + Hashtags generation
 }
 
-export function ContentPromptPanel({ 
-  onGenerate, 
-  isGenerating, 
+export function ContentPromptPanel({
+  onGenerate,
+  isGenerating,
   credits,
   mode: externalMode,
   selectedTemplate,
@@ -98,7 +98,7 @@ export function ContentPromptPanel({
   const mode = externalMode ?? internalMode
   const prompt = externalPrompt ?? internalPrompt
   const setPrompt = onPromptChange ?? setInternalPrompt
-  const setMode = externalMode !== undefined ? () => {} : setInternalMode
+  const setMode = externalMode !== undefined ? () => { } : setInternalMode
 
   // Sync mode when template is selected
   useEffect(() => {
@@ -150,13 +150,13 @@ export function ContentPromptPanel({
       <CardHeader className="pb-4">
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2 text-slate-900 dark:text-white">
-            <PenTool className="size-5 text-[#506ced]" />
+            <PenTool className="size-5 text-primary" />
             Content Prompt
           </CardTitle>
           {/* Selected Template Badge */}
           {selectedTemplate && (
             <div className="flex items-center gap-2">
-              <Badge variant="secondary" className="bg-[#506ced]/10 text-[#506ced] border-[#506ced]/20 flex items-center gap-1">
+              <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20 flex items-center gap-1">
                 <FileEdit className="size-3" />
                 {selectedTemplate.name}
               </Badge>
@@ -177,33 +177,30 @@ export function ContentPromptPanel({
         {externalMode === undefined && (
           <div className="inline-flex p-1 bg-slate-100 dark:bg-slate-800 rounded-xl w-full">
             <button
-              className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all ${
-                mode === 'IMAGE'
+              className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all ${mode === 'IMAGE'
                   ? 'bg-white dark:bg-slate-700 shadow-sm text-slate-900 dark:text-white'
                   : 'text-slate-400 hover:text-slate-600'
-              }`}
+                }`}
               onClick={() => setInternalMode('IMAGE')}
             >
               <Image className="size-4" />
               Photo
             </button>
             <button
-              className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all ${
-                mode === 'VIDEO'
+              className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all ${mode === 'VIDEO'
                   ? 'bg-white dark:bg-slate-700 shadow-sm text-slate-900 dark:text-white'
                   : 'text-slate-400 hover:text-slate-600'
-              }`}
+                }`}
               onClick={() => setInternalMode('VIDEO')}
             >
               <Video className="size-4" />
               Video
             </button>
             <button
-              className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all ${
-                mode === 'TEXT'
+              className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all ${mode === 'TEXT'
                   ? 'bg-white dark:bg-slate-700 shadow-sm text-slate-900 dark:text-white'
                   : 'text-slate-400 hover:text-slate-600'
-              }`}
+                }`}
               onClick={() => setInternalMode('TEXT')}
             >
               <FileText className="size-4" />
@@ -219,8 +216,8 @@ export function ContentPromptPanel({
               mode === 'IMAGE'
                 ? "Describe the image you want to create... e.g. A futuristic workspace with soft neon lighting."
                 : mode === 'VIDEO'
-                ? "Describe the video scene you want... e.g. A sunset over mountains with birds flying."
-                : "Describe what you want to create... e.g. A motivational caption about success."
+                  ? "Describe the video scene you want... e.g. A sunset over mountains with birds flying."
+                  : "Describe what you want to create... e.g. A motivational caption about success."
             }
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
@@ -235,7 +232,7 @@ export function ContentPromptPanel({
               {mode === 'IMAGE' ? 'Reference Image (Optional)' : 'Reference Image for Animation (Optional)'}
             </Label>
             <p className="text-xs text-slate-500 dark:text-slate-400 -mt-1 mb-2">
-              {mode === 'IMAGE' 
+              {mode === 'IMAGE'
                 ? 'Upload an image to transform or edit it based on your prompt'
                 : 'Upload a static image to animate it into a video based on your prompt'}
             </p>
@@ -250,8 +247,8 @@ export function ContentPromptPanel({
                 </button>
               </div>
             ) : (
-              <div 
-                className="border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-xl p-6 flex flex-col items-center justify-center text-center cursor-pointer hover:border-[#506ced]/50 transition-colors"
+              <div
+                className="border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-xl p-6 flex flex-col items-center justify-center text-center cursor-pointer hover:border-primary/50 transition-colors"
                 onClick={() => fileInputRef.current?.click()}
               >
                 <div className="size-12 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center mb-3 text-slate-500 dark:text-slate-400">
@@ -279,8 +276,8 @@ export function ContentPromptPanel({
         {(mode === 'IMAGE' || mode === 'VIDEO') && (
           <div className="flex items-center justify-between p-3 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
             <div className="flex items-center gap-3">
-              <div className="size-8 rounded-full bg-[#506ced]/10 flex items-center justify-center">
-                <Type className="size-4 text-[#506ced]" />
+              <div className="size-8 rounded-full bg-primary/10 flex items-center justify-center">
+                <Type className="size-4 text-primary" />
               </div>
               <div>
                 <p className="text-sm font-medium text-slate-700 dark:text-slate-300">Auto-generate Caption & Hashtags</p>
@@ -307,7 +304,7 @@ export function ContentPromptPanel({
                   variant={textType === t.value ? 'default' : 'outline'}
                   size="sm"
                   onClick={() => setTextType(t.value)}
-                  className={textType === t.value ? 'bg-[#506ced] hover:bg-[#506ced]/90' : ''}
+                  className={textType === t.value ? 'bg-primary hover:bg-primary/90' : ''}
                 >
                   <span className="mr-1">{t.icon}</span>
                   {t.label}
@@ -331,7 +328,7 @@ export function ContentPromptPanel({
                     variant={imageStyle === s ? 'default' : 'outline'}
                     size="sm"
                     onClick={() => setImageStyle(imageStyle === s ? '' : s)}
-                    className={imageStyle === s ? 'bg-[#506ced] hover:bg-[#506ced]/90' : ''}
+                    className={imageStyle === s ? 'bg-primary hover:bg-primary/90' : ''}
                   >
                     {s}
                   </Button>
@@ -350,7 +347,7 @@ export function ContentPromptPanel({
                     variant={aspectRatio === ar.value ? 'default' : 'outline'}
                     size="sm"
                     onClick={() => setAspectRatio(ar.value)}
-                    className={aspectRatio === ar.value ? 'bg-[#506ced] hover:bg-[#506ced]/90' : ''}
+                    className={aspectRatio === ar.value ? 'bg-primary hover:bg-primary/90' : ''}
                   >
                     {ar.value}
                   </Button>
@@ -374,7 +371,7 @@ export function ContentPromptPanel({
                     variant={duration === d.value ? 'default' : 'outline'}
                     size="sm"
                     onClick={() => setDuration(d.value)}
-                    className={duration === d.value ? 'bg-[#506ced] hover:bg-[#506ced]/90' : ''}
+                    className={duration === d.value ? 'bg-primary hover:bg-primary/90' : ''}
                   >
                     {d.label}
                   </Button>
@@ -393,7 +390,7 @@ export function ContentPromptPanel({
                     variant={aspectRatio === ar.value ? 'default' : 'outline'}
                     size="sm"
                     onClick={() => setAspectRatio(ar.value)}
-                    className={aspectRatio === ar.value ? 'bg-[#506ced] hover:bg-[#506ced]/90' : ''}
+                    className={aspectRatio === ar.value ? 'bg-primary hover:bg-primary/90' : ''}
                   >
                     {ar.value}
                   </Button>
@@ -408,7 +405,7 @@ export function ContentPromptPanel({
           <Button
             onClick={handleGenerate}
             disabled={isGenerating || !prompt.trim() || credits < creditCost}
-            className="w-full bg-[#506ced] hover:bg-[#506ced]/90 text-white font-bold py-3.5 shadow-lg shadow-[#506ced]/20 flex items-center justify-center gap-2"
+            className="w-full bg-primary hover:bg-primary/90 text-white font-bold py-3.5 shadow-lg shadow-primary/20 flex items-center justify-center gap-2"
           >
             {isGenerating ? (
               <>

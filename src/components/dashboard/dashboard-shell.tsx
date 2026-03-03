@@ -31,9 +31,9 @@ export function DashboardShell({ children, balance, user }: DashboardShellProps)
                 <span className="text-xs">© 2025 ArtomilyAI. All rights reserved.</span>
               </div>
               <div className="flex items-center gap-6">
-                <a className="text-xs text-muted-foreground hover:text-[#506ced] transition-colors" href="#">Privacy</a>
-                <a className="text-xs text-muted-foreground hover:text-[#506ced] transition-colors" href="#">Terms</a>
-                <a className="text-xs text-muted-foreground hover:text-[#506ced] transition-colors" href="#">Support</a>
+                <a className="text-xs text-muted-foreground hover:text-primary transition-colors" href="#">Privacy</a>
+                <a className="text-xs text-muted-foreground hover:text-primary transition-colors" href="#">Terms</a>
+                <a className="text-xs text-muted-foreground hover:text-primary transition-colors" href="#">Support</a>
               </div>
             </div>
           </footer>

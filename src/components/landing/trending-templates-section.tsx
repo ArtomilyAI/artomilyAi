@@ -99,7 +99,7 @@ export function TrendingTemplatesSection({ templates }: TrendingTemplatesSection
           </h2>
           <Link
             href="/dashboard/templates"
-            className="text-[#506ced] hover:text-[#506ced]/80 font-semibold text-sm flex items-center gap-1 group"
+            className="text-primary hover:text-primary/80 font-semibold text-sm flex items-center gap-1 group"
           >
             View all templates
             <svg
@@ -117,7 +117,7 @@ export function TrendingTemplatesSection({ templates }: TrendingTemplatesSection
           {displayTemplates.map((template, index) => {
             const config = CATEGORY_CONFIG[template.category] || CATEGORY_CONFIG.SOCIAL_MEDIA
             const typeIcon = TYPE_ICONS[template.type] || '📄'
-            
+
             return (
               <Link href={`/dashboard/templates?select=${template.id}`} key={template.id || index}>
                 <Card className="template-card bg-white dark:bg-slate-800 rounded-2xl overflow-hidden border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-xl transition-all duration-300 group cursor-pointer h-full">
@@ -135,11 +135,11 @@ export function TrendingTemplatesSection({ templates }: TrendingTemplatesSection
 
                   <CardContent className="p-6">
                     <div className="flex items-center gap-2 mb-3">
-                      <span className="text-xs font-semibold text-[#506ced] uppercase tracking-wide">
+                      <span className="text-xs font-semibold text-primary uppercase tracking-wide">
                         {template.tags?.slice(0, 2).join(' • ') || 'General'}
                       </span>
                     </div>
-                    <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2 group-hover:text-[#506ced] transition-colors">
+                    <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2 group-hover:text-primary transition-colors">
                       {template.name}
                     </h3>
                     <p className="text-slate-500 dark:text-slate-400 text-sm mb-4 line-clamp-2">
@@ -150,7 +150,7 @@ export function TrendingTemplatesSection({ templates }: TrendingTemplatesSection
                         <span>{typeIcon}</span>
                         <span>{template.type}</span>
                       </div>
-                      <span className="size-8 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-slate-600 dark:text-slate-300 group-hover:bg-[#506ced] group-hover:text-white transition-colors">
+                      <span className="size-8 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center text-slate-600 dark:text-slate-300 group-hover:bg-primary group-hover:text-white transition-colors">
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
                           viewBox="0 0 24 24"

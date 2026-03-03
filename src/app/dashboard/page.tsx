@@ -7,9 +7,9 @@ import { TemplateHub } from '@/components/dashboard/template-hub'
 import { GenerationLoadingModal, advanceGenerationStep } from '@/components/dashboard/generation-loading-modal'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { 
-  Image, 
-  Video, 
+import {
+  Image,
+  Video,
   FileText,
   Zap,
   Star,
@@ -17,14 +17,14 @@ import {
   AlertTriangle,
   X
 } from 'lucide-react'
-import { 
-  useTemplates, 
-  useGenerations, 
-  useUserWallet, 
+import {
+  useTemplates,
+  useGenerations,
+  useUserWallet,
   useGenerate,
   useGenerationStatus,
   type Template,
-  type Generation 
+  type Generation
 } from '@/hooks/use-queries'
 
 export default function DashboardPage() {
@@ -37,7 +37,7 @@ export default function DashboardPage() {
   const [pendingGenerationType, setPendingGenerationType] = useState<'TEXT' | 'IMAGE' | 'VIDEO' | null>(null)
   const [pendingGenerateMetadata, setPendingGenerateMetadata] = useState(false)
   const [pendingPrompt, setPendingPrompt] = useState('')
-  
+
   // Results state (not cached - UI state only)
   const [result, setResult] = useState<{
     image?: string | null
@@ -55,7 +55,7 @@ export default function DashboardPage() {
   const { data: templatesData } = useTemplates({ limit: 6 })
   const { data: generationsData, refetch: refetchGenerations } = useGenerations({ limit: 6 })
   const generateMutation = useGenerate()
-  
+
   // Poll for generation status when there's a pending generation
   const { data: generationStatus } = useGenerationStatus(pendingGenerationId, {
     enabled: !!pendingGenerationId,
@@ -75,12 +75,12 @@ export default function DashboardPage() {
   const generateCaptionAndHashtags = async (imageUrl: string, type: 'IMAGE' | 'VIDEO', prompt: string) => {
     try {
       advanceGenerationStep() // Move to caption step
-      
+
       // Create a more contextual prompt that includes the original generation context
-      const contextualPrompt = type === 'IMAGE' 
+      const contextualPrompt = type === 'IMAGE'
         ? `Write an engaging social media caption for this image. The image was generated based on this prompt: "${prompt}". Include relevant hashtags at the end.`
         : `Write an engaging social media caption for this video. The video was generated based on this prompt: "${prompt}". Include relevant hashtags at the end.`
-      
+
       const captionResponse = await fetch('/api/generate/caption', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -89,11 +89,11 @@ export default function DashboardPage() {
           prompt: prompt,
         }),
       })
-      
+
       if (captionResponse.ok) {
         const captionData = await captionResponse.json()
         advanceGenerationStep() // Move to hashtags step
-        
+
         return {
           caption: captionData.result,
           hashtags: extractHashtags(captionData.result),
@@ -102,7 +102,7 @@ export default function DashboardPage() {
     } catch (err) {
       console.error('Failed to generate caption:', err)
     }
-    
+
     return { caption: null, hashtags: [] }
   }
 
@@ -113,7 +113,7 @@ export default function DashboardPage() {
     if (generationStatus.status === 'COMPLETED' && generationStatus.resultUrl) {
       // Generation completed - update result
       const resultUrl = generationStatus.resultUrl
-      
+
       if (pendingGenerationType === 'VIDEO') {
         setResult({
           video: resultUrl,
@@ -121,7 +121,7 @@ export default function DashboardPage() {
           hashtags: [],
           generationId: pendingGenerationId,
         })
-        
+
         // Generate caption if requested
         if (pendingGenerateMetadata) {
           generateCaptionAndHashtags(resultUrl, 'VIDEO', pendingPrompt).then(({ caption, hashtags }) => {
@@ -135,7 +135,7 @@ export default function DashboardPage() {
           hashtags: [],
           generationId: pendingGenerationId,
         })
-        
+
         // Generate caption if requested
         if (pendingGenerateMetadata) {
           generateCaptionAndHashtags(resultUrl, 'IMAGE', pendingPrompt).then(({ caption, hashtags }) => {
@@ -158,7 +158,7 @@ export default function DashboardPage() {
       setIsGenerating(false)
       setIsModalComplete(true)
       refetchGenerations()
-      
+
       // Clear template selection
       setPrompt('')
       setSelectedTemplate(null)
@@ -212,14 +212,14 @@ export default function DashboardPage() {
     setSelectedTemplate(template)
     setPrompt(template.prompt)
     setMode(template.type as 'TEXT' | 'IMAGE' | 'VIDEO')
-    
+
     // Increment template usage
     try {
       await fetch(`/api/templates/${template.id}/use`, { method: 'POST' })
     } catch (err) {
       console.error('Failed to increment template usage:', err)
     }
-    
+
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
@@ -237,8 +237,8 @@ export default function DashboardPage() {
   return (
     <div className="space-y-10">
       {/* Generation Loading Modal */}
-      <GenerationLoadingModal 
-        isOpen={isGenerating} 
+      <GenerationLoadingModal
+        isOpen={isGenerating}
         mode={generationMode}
         hasReference={!!referenceUrl}
         isComplete={isModalComplete}
@@ -248,33 +248,30 @@ export default function DashboardPage() {
       {/* Mode Toggle */}
       <div className="inline-flex p-1 bg-slate-200/50 dark:bg-slate-800/50 rounded-xl">
         <button
-          className={`flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-semibold transition-all ${
-            mode === 'IMAGE'
+          className={`flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-semibold transition-all ${mode === 'IMAGE'
               ? 'bg-white dark:bg-slate-700 shadow-sm text-slate-900 dark:text-white'
               : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'
-          }`}
+            }`}
           onClick={() => setMode('IMAGE')}
         >
           <Image className="size-4" />
           Photo Mode
         </button>
         <button
-          className={`flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-semibold transition-all ${
-            mode === 'VIDEO'
+          className={`flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-semibold transition-all ${mode === 'VIDEO'
               ? 'bg-white dark:bg-slate-700 shadow-sm text-slate-900 dark:text-white'
               : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'
-          }`}
+            }`}
           onClick={() => setMode('VIDEO')}
         >
           <Video className="size-4" />
           Video Mode
         </button>
         <button
-          className={`flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-semibold transition-all ${
-            mode === 'TEXT'
+          className={`flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-semibold transition-all ${mode === 'TEXT'
               ? 'bg-white dark:bg-slate-700 shadow-sm text-slate-900 dark:text-white'
               : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'
-          }`}
+            }`}
           onClick={() => setMode('TEXT')}
         >
           <FileText className="size-4" />
@@ -304,11 +301,11 @@ export default function DashboardPage() {
           {/* <div className="grid grid-cols-2 gap-4">
             <Card className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
               <CardContent className="p-4 flex items-center gap-3">
-                <div className="size-10 rounded-full bg-[#506ced]/10 flex items-center justify-center">
-                  <Zap className="size-5 text-[#506ced]" />
+                <div className="size-10 rounded-full bg-primary/10 flex items-center justify-center">
+                  <Zap className="size-5 text-primary" />
                 </div>
                 <div>
-                  <div className="text-2xl font-bold text-[#506ced]">{credits}</div>
+                  <div className="text-2xl font-bold text-primary">{credits}</div>
                   <div className="text-sm text-slate-500">Credits Available</div>
                 </div>
               </CardContent>
@@ -354,18 +351,18 @@ export default function DashboardPage() {
       <div>
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-            <Star className="size-5 text-[#506ced]" />
+            <Star className="size-5 text-primary" />
             Template Hub
           </h2>
-          <a 
-            href="/dashboard/templates" 
-            className="text-sm text-[#506ced] hover:underline font-medium"
+          <a
+            href="/dashboard/templates"
+            className="text-sm text-primary hover:underline font-medium"
           >
             View All →
           </a>
         </div>
-        <TemplateHub 
-          onSelectTemplate={handleSelectTemplate} 
+        <TemplateHub
+          onSelectTemplate={handleSelectTemplate}
           templates={templates}
         />
       </div>
@@ -375,12 +372,12 @@ export default function DashboardPage() {
         <div>
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-              <FolderOpen className="size-5 text-[#506ced]" />
+              <FolderOpen className="size-5 text-primary" />
               Recent Generations
             </h2>
-            <a 
-              href="/dashboard/library" 
-              className="text-sm text-[#506ced] hover:underline font-medium"
+            <a
+              href="/dashboard/library"
+              className="text-sm text-primary hover:underline font-medium"
             >
               View Library →
             </a>
@@ -389,7 +386,7 @@ export default function DashboardPage() {
             {recentGenerations.map((gen: Generation) => (
               <div
                 key={gen.id}
-                className="group relative rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 aspect-square cursor-pointer hover:ring-2 hover:ring-[#506ced]/50 transition-all"
+                className="group relative rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 aspect-square cursor-pointer hover:ring-2 hover:ring-primary/50 transition-all"
               >
                 {gen.type === 'IMAGE' && gen.resultUrl ? (
                   <img

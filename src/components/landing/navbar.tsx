@@ -3,6 +3,7 @@
 import { useEffect, useRef } from 'react'
 import { gsap } from 'gsap'
 import { Button } from '@/components/ui/button'
+import { ThemeToggle } from '@/components/theme-toggle'
 import Link from 'next/link'
 
 const navLinks = [
@@ -59,9 +60,9 @@ export function Navbar() {
       <div className="flex items-center justify-between mx-auto max-w-7xl">
         <Link href="/" className="flex items-center gap-2">
           <div ref={logoRef} className="flex items-center gap-2">
-            <div className="flex items-center justify-center size-8 rounded-lg bg-[#506ced] text-white">
+            {/* <div className="flex items-center justify-center size-8 rounded-lg bg-primary text-white">
               <span className="text-lg">✨</span>
-            </div>
+            </div> */}
             <h2 className="text-slate-900 dark:text-white text-lg font-bold leading-tight tracking-tight">
               ArtomilyAI
             </h2>
@@ -73,14 +74,14 @@ export function Navbar() {
             <Link
               key={link.href}
               href={link.href}
-              className="nav-link text-slate-600 hover:text-[#506ced] dark:text-slate-300 dark:hover:text-white text-sm font-medium transition-colors"
+              className="nav-link text-slate-600 hover:text-primary dark:text-slate-300 dark:hover:text-white text-sm font-medium transition-colors"
             >
               {link.label}
             </Link>
           ))}
         </nav>
 
-        <div className="flex gap-3">
+        <div className="flex items-center gap-2">
           <Link href="/auth/login">
             <Button
               variant="ghost"
@@ -90,10 +91,11 @@ export function Navbar() {
             </Button>
           </Link>
           <Link href="/auth/register">
-            <Button className="nav-button h-9 px-4 shadow-sm bg-[#506ced] hover:bg-[#506ced]/90">
+            <Button className="nav-button h-9 px-4 shadow-sm bg-primary hover:bg-primary/90">
               Get Started
             </Button>
           </Link>
+          <ThemeToggle />
         </div>
       </div>
     </header>

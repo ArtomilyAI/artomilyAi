@@ -57,7 +57,7 @@ export function AppSidebar({ balance }: AppSidebarProps) {
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild tooltip="ArtomilyAI">
               <Link href="/dashboard">
-                <div className="flex size-8 items-center justify-center rounded-lg bg-[#506ced] text-white">
+                <div className="flex size-8 items-center justify-center rounded-lg bg-primary text-white">
                   <Sparkles className="size-4" />
                 </div>
                 <div className="flex flex-col gap-0.5 leading-none">
@@ -89,7 +89,7 @@ export function AppSidebar({ balance }: AppSidebarProps) {
                       asChild
                       isActive={isActive}
                       tooltip={item.title}
-                      className={isActive ? "bg-[#506ced]/10 text-[#506ced] hover:bg-[#506ced]/15 hover:text-[#506ced]" : ""}
+                      className={isActive ? "bg-primary/10 text-primary hover:bg-primary/15 hover:text-primary" : ""}
                     >
                       <Link href={item.href}>
                         <item.icon className="size-4" />
@@ -110,10 +110,10 @@ export function AppSidebar({ balance }: AppSidebarProps) {
           <SidebarMenuItem>
             <SidebarMenuButton
               tooltip={`${balance} Credits`}
-              className="h-10 bg-[#506ced]/5 border border-[#506ced]/15 hover:bg-[#506ced]/10 cursor-default"
+              className="h-10 bg-primary/5 border border-primary/15 hover:bg-primary/10 cursor-default"
             >
-              <Gem className="size-4 text-[#506ced] shrink-0" />
-              <span className="text-xs font-semibold text-[#506ced]">
+              <Gem className="size-4 text-primary shrink-0" />
+              <span className="text-xs font-semibold text-primary">
                 {balance} Credits
               </span>
             </SidebarMenuButton>

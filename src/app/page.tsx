@@ -13,7 +13,7 @@ export default async function Home() {
   const { templates } = await TemplateService.getTemplates({ limit: 6 })
 
   return (
-    <div className="relative flex min-h-screen w-full flex-col bg-white dark:bg-slate-950 antialiased">
+    <div className="relative flex not-last:flex-col bg-white dark:bg-slate-950">
       <Navbar />
       <main className="flex-grow">
         <HeroSection />

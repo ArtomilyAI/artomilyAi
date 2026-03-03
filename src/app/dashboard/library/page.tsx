@@ -6,11 +6,11 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { 
-  useGenerations, 
-  useDeleteGeneration, 
+import {
+  useGenerations,
+  useDeleteGeneration,
   useToggleGenerationPublic,
-  type Generation 
+  type Generation
 } from '@/hooks/use-queries'
 
 export default function LibraryPage() {
@@ -19,9 +19,9 @@ export default function LibraryPage() {
   const [filter, setFilter] = useState<'all' | 'TEXT' | 'IMAGE' | 'VIDEO'>('all')
 
   // TanStack Query hooks
-  const { data, isLoading, isFetching } = useGenerations({ 
-    type: filter, 
-    limit: 50 
+  const { data, isLoading, isFetching } = useGenerations({
+    type: filter,
+    limit: 50
   })
   const deleteMutation = useDeleteGeneration()
   const togglePublicMutation = useToggleGenerationPublic()
@@ -35,8 +35,19 @@ export default function LibraryPage() {
     setSelectedGeneration(null)
   }
 
+  const handleShare = async () => {
+    console.log('Sharing generation:', selectedGeneration)
+    if (selectedGeneration?.id) {
+      const url = `${window.location.origin}/share/${selectedGeneration.id}`
+      await navigator.clipboard.writeText(url)
+
+      alert('Shareable URL copied to clipboard!')
+    }
+  }
+
   const handleTogglePublic = async (id: string) => {
     togglePublicMutation.mutate(id)
+    await handleShare()
   }
 
   return (
@@ -59,7 +70,7 @@ export default function LibraryPage() {
                 variant={filter === type ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => setFilter(type)}
-                className={filter === type ? 'bg-[#506ced] hover:bg-[#506ced]/90' : ''}
+                className={filter === type ? 'bg-primary hover:bg-primary/90' : ''}
               >
                 {type === 'all' ? 'All' : type}
               </Button>
@@ -72,7 +83,7 @@ export default function LibraryPage() {
               variant={viewMode === 'grid' ? 'default' : 'ghost'}
               size="sm"
               onClick={() => setViewMode('grid')}
-              className={viewMode === 'grid' ? 'bg-white dark:bg-slate-700 shadow-sm' : ''}
+              className={viewMode === 'grid' ? 'bg-primary dark:bg-slate-700 shadow-sm' : ''}
             >
               ▦ Grid
             </Button>
@@ -80,7 +91,7 @@ export default function LibraryPage() {
               variant={viewMode === 'list' ? 'default' : 'ghost'}
               size="sm"
               onClick={() => setViewMode('list')}
-              className={viewMode === 'list' ? 'bg-white dark:bg-slate-700 shadow-sm' : ''}
+              className={viewMode === 'list' ? 'bg-primary dark:bg-slate-700 shadow-sm' : ''}
             >
               ☰ List
             </Button>
@@ -127,8 +138,8 @@ export default function LibraryPage() {
                       selectedGeneration.status === 'COMPLETED'
                         ? 'default'
                         : selectedGeneration.status === 'FAILED'
-                        ? 'destructive'
-                        : 'secondary'
+                          ? 'destructive'
+                          : 'secondary'
                     }
                   >
                     {selectedGeneration.status}
@@ -179,7 +190,7 @@ export default function LibraryPage() {
                     onClick={() => handleTogglePublic(selectedGeneration.id)}
                     disabled={togglePublicMutation.isPending}
                   >
-                    {selectedGeneration.isPublic ? 'Make Private' : 'Make Public'}
+                    {selectedGeneration.isPublic ? 'Make Private' : 'Make Public & Share'}
                   </Button>
                   <Button
                     variant="destructive"

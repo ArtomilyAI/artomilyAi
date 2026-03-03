@@ -32,7 +32,7 @@ const TYPE_CONFIG = {
 export default function SharePage() {
   const params = useParams()
   const shareId = params.id as string
-  
+
   const [generation, setGeneration] = useState<SharedGeneration | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -91,7 +91,7 @@ export default function SharePage() {
               {error || 'This shared content may have been removed or expired.'}
             </p>
             <Link href="/">
-              <Button className="bg-[#506ced] hover:bg-[#506ced]/90">
+              <Button className="bg-primary hover:bg-primary/90">
                 Go to Homepage
               </Button>
             </Link>
@@ -104,18 +104,18 @@ export default function SharePage() {
   const typeConfig = TYPE_CONFIG[generation.type]
 
   return (
-    <div className="min-h-screen bg-[#f6f6f8] dark:bg-[#111421]">
+    <div className="min-h-screen w-full bg-[#f6f6f8] dark:bg-[#111421]">
       {/* Header */}
       <header className="sticky top-0 z-50 w-full border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-[#111421]/80 backdrop-blur-md">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-3">
-            <div className="bg-[#506ced] p-1.5 rounded-lg text-white">
+            <div className="bg-primary p-1.5 rounded-lg text-white">
               <span className="block text-lg">✨</span>
             </div>
             <h1 className="text-xl font-bold tracking-tight">ArtomilyAI</h1>
           </Link>
           <Link href="/auth/register">
-            <Button className="bg-[#506ced] hover:bg-[#506ced]/90">
+            <Button className="bg-primary hover:bg-primary/90">
               Create Your Own
             </Button>
           </Link>
@@ -128,7 +128,7 @@ export default function SharePage() {
         <div className="flex items-center gap-3 mb-6">
           <Avatar>
             <AvatarImage src={generation.user.image || ''} />
-            <AvatarFallback className="bg-[#506ced]/10 text-[#506ced]">
+            <AvatarFallback className="bg-primary/10 text-primary">
               {generation.user.name?.[0] || 'U'}
             </AvatarFallback>
           </Avatar>
@@ -240,7 +240,7 @@ export default function SharePage() {
             Create your own AI-generated content with ArtomilyAI
           </p>
           <Link href="/auth/register">
-            <Button size="lg" className="bg-[#506ced] hover:bg-[#506ced]/90 shadow-lg shadow-[#506ced]/20">
+            <Button size="lg" className="bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20">
               ✨ Get Started Free
             </Button>
           </Link>

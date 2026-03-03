@@ -102,26 +102,24 @@ export function PricingSection() {
           {plans.map((plan, index) => (
             <Card
               key={index}
-              className={`pricing-card relative flex flex-col overflow-hidden ${
-                plan.popular
+              className={`pricing-card relative flex flex-col overflow-hidden ${plan.popular
                   ? 'bg-slate-900 dark:bg-slate-800 text-white border-transparent'
                   : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700'
-              }`}
+                }`}
             >
               {plan.popular && (
-                <div className="absolute top-0 right-0 w-64 h-64 bg-[#506ced]/20 blur-[80px] rounded-full pointer-events-none -mr-16 -mt-16" />
+                <div className="absolute top-0 right-0 w-64 h-64 bg-primary/20 blur-[80px] rounded-full pointer-events-none -mr-16 -mt-16" />
               )}
               <CardContent className="p-8 flex flex-col h-full relative z-10">
                 <div className="flex justify-between items-start mb-2">
                   <h3
-                    className={`text-xl font-bold ${
-                      plan.popular ? 'text-white' : 'text-slate-900 dark:text-white'
-                    }`}
+                    className={`text-xl font-bold ${plan.popular ? 'text-white' : 'text-slate-900 dark:text-white'
+                      }`}
                   >
                     {plan.name}
                   </h3>
                   {plan.popular && (
-                    <Badge className="bg-[#506ced] text-white text-xs font-bold">
+                    <Badge className="bg-primary text-white text-xs font-bold">
                       Most Popular
                     </Badge>
                   )}
@@ -129,25 +127,22 @@ export function PricingSection() {
 
                 <div className="flex items-end gap-1 mb-6">
                   <span
-                    className={`text-4xl font-black ${
-                      plan.popular ? 'text-white' : 'text-slate-900 dark:text-white'
-                    }`}
+                    className={`text-4xl font-black ${plan.popular ? 'text-white' : 'text-slate-900 dark:text-white'
+                      }`}
                   >
                     {plan.price}
                   </span>
                   <span
-                    className={`mb-1 ${
-                      plan.popular ? 'text-slate-400' : 'text-slate-500'
-                    }`}
+                    className={`mb-1 ${plan.popular ? 'text-slate-400' : 'text-slate-500'
+                      }`}
                   >
                     {plan.period}
                   </span>
                 </div>
 
                 <p
-                  className={`text-sm mb-8 ${
-                    plan.popular ? 'text-slate-300' : 'text-slate-600 dark:text-slate-400'
-                  }`}
+                  className={`text-sm mb-8 ${plan.popular ? 'text-slate-300' : 'text-slate-600 dark:text-slate-400'
+                    }`}
                 >
                   {plan.description}
                 </p>
@@ -156,19 +151,17 @@ export function PricingSection() {
                   {plan.features.map((feature, featureIndex) => (
                     <li
                       key={featureIndex}
-                      className={`flex items-center gap-3 text-sm ${
-                        plan.popular
+                      className={`flex items-center gap-3 text-sm ${plan.popular
                           ? 'text-slate-200'
                           : 'text-slate-700 dark:text-slate-300'
-                      }`}
+                        }`}
                     >
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
                         viewBox="0 0 24 24"
                         fill="currentColor"
-                        className={`size-5 ${
-                          plan.popular ? 'text-[#506ced]' : 'text-green-500'
-                        }`}
+                        className={`size-5 ${plan.popular ? 'text-primary' : 'text-green-500'
+                          }`}
                       >
                         <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
                       </svg>
@@ -180,11 +173,10 @@ export function PricingSection() {
                 <Link href={plan.buttonHref} className="w-full">
                   <Button
                     variant={plan.popular ? 'default' : 'outline'}
-                    className={`w-full py-3 ${
-                      plan.popular
-                        ? 'shadow-lg shadow-[#506ced]/25 bg-[#506ced] hover:bg-[#506ced]/90'
+                    className={`w-full py-3 ${plan.popular
+                        ? 'shadow-lg shadow-primary/25 bg-primary hover:bg-primary/90'
                         : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700'
-                    }`}
+                      }`}
                   >
                     {plan.buttonText}
                   </Button>

@@ -35,7 +35,7 @@ export function UserNav({ user }: UserNavProps) {
         <button className="flex items-center gap-2 rounded-full py-1 pl-1 pr-2 outline-none hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring transition-colors cursor-pointer">
           <Avatar className="size-8 border border-border">
             <AvatarImage src={user.image || ""} />
-            <AvatarFallback className="bg-[#506ced]/10 text-[#506ced] font-semibold text-xs">
+            <AvatarFallback className="bg-primary/10 text-primary font-semibold text-xs">
               {user.name?.[0] || user.email?.[0] || "U"}
             </AvatarFallback>
           </Avatar>

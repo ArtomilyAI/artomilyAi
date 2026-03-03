@@ -59,7 +59,7 @@ export function Footer() {
         <div className="footer-content grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-8 mb-12">
           <div className="col-span-2 lg:col-span-2">
             <Link href="/" className="flex items-center gap-2 mb-4">
-              <div className="flex items-center justify-center size-8 rounded-lg bg-[#506ced] text-white">
+              <div className="flex items-center justify-center size-8 rounded-lg bg-primary text-white">
                 <span className="text-base">✨</span>
               </div>
               <h2 className="text-slate-900 dark:text-white text-lg font-bold">
@@ -73,7 +73,7 @@ export function Footer() {
             <div className="flex gap-4">
               <Link
                 href="#"
-                className="text-slate-400 hover:text-[#506ced] transition-colors"
+                className="text-slate-400 hover:text-primary transition-colors"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -86,7 +86,7 @@ export function Footer() {
               </Link>
               <Link
                 href="#"
-                className="text-slate-400 hover:text-[#506ced] transition-colors"
+                className="text-slate-400 hover:text-primary transition-colors"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -99,7 +99,7 @@ export function Footer() {
               </Link>
               <Link
                 href="#"
-                className="text-slate-400 hover:text-[#506ced] transition-colors"
+                className="text-slate-400 hover:text-primary transition-colors"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -120,7 +120,7 @@ export function Footer() {
             <ul className="space-y-2 text-sm text-slate-600 dark:text-slate-400">
               {footerLinks.product.map((link, index) => (
                 <li key={index}>
-                  <Link href={link.href} className="hover:text-[#506ced]">
+                  <Link href={link.href} className="hover:text-primary">
                     {link.label}
                   </Link>
                 </li>
@@ -135,7 +135,7 @@ export function Footer() {
             <ul className="space-y-2 text-sm text-slate-600 dark:text-slate-400">
               {footerLinks.resources.map((link, index) => (
                 <li key={index}>
-                  <Link href={link.href} className="hover:text-[#506ced]">
+                  <Link href={link.href} className="hover:text-primary">
                     {link.label}
                   </Link>
                 </li>
@@ -150,7 +150,7 @@ export function Footer() {
             <ul className="space-y-2 text-sm text-slate-600 dark:text-slate-400">
               {footerLinks.company.map((link, index) => (
                 <li key={index}>
-                  <Link href={link.href} className="hover:text-[#506ced]">
+                  <Link href={link.href} className="hover:text-primary">
                     {link.label}
                   </Link>
                 </li>

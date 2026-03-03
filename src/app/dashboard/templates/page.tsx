@@ -35,7 +35,7 @@ export default function TemplatesPage() {
     search: searchQuery || undefined,
     limit: 50,
   })
-  
+
   const templateUsage = useTemplateUsage()
 
   const templates = data?.templates ?? []
@@ -88,7 +88,7 @@ export default function TemplatesPage() {
             variant={activeCategory === cat.value ? 'default' : 'outline'}
             size="sm"
             onClick={() => setActiveCategory(cat.value)}
-            className={activeCategory === cat.value ? 'bg-[#506ced] hover:bg-[#506ced]/90' : ''}
+            className={activeCategory === cat.value ? 'bg-primary hover:bg-primary/90' : ''}
           >
             <span className="mr-1">{cat.icon}</span>
             {cat.label}
@@ -124,11 +124,11 @@ export default function TemplatesPage() {
           {templates.map((template: Template) => (
             <Card
               key={template.id}
-              className="group cursor-pointer hover:ring-2 hover:ring-[#506ced]/50 transition-all overflow-hidden bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800"
+              className="group cursor-pointer hover:ring-2 hover:ring-primary/50 transition-all overflow-hidden bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800"
               onClick={() => handleSelectTemplate(template)}
             >
               {/* Thumbnail */}
-              <div className="aspect-[4/5] relative overflow-hidden bg-gradient-to-br from-[#506ced]/10 to-pink-500/10">
+              <div className="aspect-[4/5] relative overflow-hidden bg-gradient-to-br from-primary/10 to-pink-500/10">
                 {template.thumbnail ? (
                   <img
                     src={template.thumbnail}
@@ -144,7 +144,7 @@ export default function TemplatesPage() {
                 )}
 
                 {/* Overlay */}
-                <div className="absolute inset-0 bg-[#506ced]/80 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                <div className="absolute inset-0 bg-primary/80 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                   <span className="text-white font-semibold text-sm">Use Template</span>
                 </div>
 
@@ -160,7 +160,7 @@ export default function TemplatesPage() {
                 <div className="flex items-center gap-2 mb-1">
                   <Badge
                     variant="secondary"
-                    className="text-xs bg-[#506ced]/10 text-[#506ced] border-0"
+                    className="text-xs bg-primary/10 text-primary border-0"
                   >
                     {template.type}
                   </Badge>
@@ -247,7 +247,7 @@ export default function TemplatesPage() {
                 {/* Actions */}
                 <div className="flex gap-2">
                   <Button
-                    className="flex-1 bg-[#506ced] hover:bg-[#506ced]/90"
+                    className="flex-1 bg-primary hover:bg-primary/90"
                     onClick={handleUseTemplate}
                     disabled={templateUsage.isPending}
                   >

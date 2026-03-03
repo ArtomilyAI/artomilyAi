@@ -5,14 +5,14 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { 
-  Image as ImageIcon, 
-  Video, 
-  FileText, 
-  Copy, 
-  Check, 
-  Download, 
-  Share2, 
+import {
+  Image as ImageIcon,
+  Video,
+  FileText,
+  Copy,
+  Check,
+  Download,
+  Share2,
   Eye,
   Hash
 } from 'lucide-react'
@@ -97,11 +97,10 @@ export function ResultDisplay({
         {/* Tabs */}
         <div className="flex border-b border-slate-200 dark:border-slate-800">
           <button
-            className={`flex-1 py-4 text-sm font-semibold flex items-center justify-center gap-2 transition-colors ${
-              activeTab === 'result'
-                ? 'border-b-2 border-[#506ced] text-[#506ced] bg-[#506ced]/5'
+            className={`flex-1 py-4 text-sm font-semibold flex items-center justify-center gap-2 transition-colors ${activeTab === 'result'
+                ? 'border-b-2 border-primary text-primary bg-primary/5'
                 : 'border-b-2 border-transparent text-slate-500 hover:text-slate-700'
-            }`}
+              }`}
             onClick={() => setActiveTab('result')}
           >
             {getResultIcon()}
@@ -110,11 +109,10 @@ export function ResultDisplay({
           {/* Only show Caption tab for non-TEXT mode */}
           {!isTextMode && (
             <button
-              className={`flex-1 py-4 text-sm font-semibold flex items-center justify-center gap-2 transition-colors ${
-                activeTab === 'caption'
-                  ? 'border-b-2 border-[#506ced] text-[#506ced] bg-[#506ced]/5'
+              className={`flex-1 py-4 text-sm font-semibold flex items-center justify-center gap-2 transition-colors ${activeTab === 'caption'
+                  ? 'border-b-2 border-primary text-primary bg-primary/5'
                   : 'border-b-2 border-transparent text-slate-500 hover:text-slate-700'
-              }`}
+                }`}
               onClick={() => setActiveTab('caption')}
             >
               <FileText className="size-4" />
@@ -124,11 +122,10 @@ export function ResultDisplay({
           {/* Only show Hashtags tab for non-TEXT mode */}
           {!isTextMode && (
             <button
-              className={`flex-1 py-4 text-sm font-semibold flex items-center justify-center gap-2 transition-colors ${
-                activeTab === 'hashtags'
-                  ? 'border-b-2 border-[#506ced] text-[#506ced] bg-[#506ced]/5'
+              className={`flex-1 py-4 text-sm font-semibold flex items-center justify-center gap-2 transition-colors ${activeTab === 'hashtags'
+                  ? 'border-b-2 border-primary text-primary bg-primary/5'
                   : 'border-b-2 border-transparent text-slate-500 hover:text-slate-700'
-              }`}
+                }`}
               onClick={() => setActiveTab('hashtags')}
             >
               <Hash className="size-4" />
@@ -144,15 +141,15 @@ export function ResultDisplay({
               {isLoading ? (
                 <div className="flex flex-col items-center justify-center min-h-[300px] space-y-4">
                   <div className="relative">
-                    <div className="size-16 rounded-full bg-gradient-to-r from-[#506ced] to-[#7c3aed] animate-spin" 
-                         style={{ animationDuration: '2s' }}>
+                    <div className="size-16 rounded-full bg-gradient-to-r from-primary to-[#7c3aed] animate-spin"
+                      style={{ animationDuration: '2s' }}>
                       <div className="absolute inset-2 rounded-full bg-white dark:bg-slate-900 flex items-center justify-center">
                         {loadingMode === 'VIDEO' ? (
-                          <Video className="size-6 text-[#506ced]" />
+                          <Video className="size-6 text-primary" />
                         ) : loadingMode === 'IMAGE' ? (
-                          <ImageIcon className="size-6 text-[#506ced]" />
+                          <ImageIcon className="size-6 text-primary" />
                         ) : (
-                          <FileText className="size-6 text-[#506ced]" />
+                          <FileText className="size-6 text-primary" />
                         )}
                       </div>
                     </div>
@@ -227,14 +224,14 @@ export function ResultDisplay({
                 <div className="flex-1 flex flex-col">
                   <div className="flex items-center justify-between mb-3">
                     <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                      <FileText className="size-4 text-[#506ced]" />
+                      <FileText className="size-4 text-primary" />
                       Generated Text
                     </h3>
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => handleCopy('caption')}
-                      className="text-xs font-bold text-[#506ced] hover:underline"
+                      className="text-xs font-bold text-primary hover:underline"
                     >
                       {copied === 'caption' ? <><Check className="size-3 mr-1" /> Copied!</> : <><Copy className="size-3 mr-1" /> Copy</>}
                     </Button>
@@ -251,7 +248,7 @@ export function ResultDisplay({
                           variant="ghost"
                           size="sm"
                           onClick={() => handleCopy('hashtags')}
-                          className="text-xs text-[#506ced] hover:underline p-0 h-auto"
+                          className="text-xs text-primary hover:underline p-0 h-auto"
                         >
                           {copied === 'hashtags' ? <><Check className="size-3 mr-1" /> Copied!</> : <><Copy className="size-3 mr-1" /> Copy All</>}
                         </Button>
@@ -261,7 +258,7 @@ export function ResultDisplay({
                           <Badge
                             key={i}
                             variant="secondary"
-                            className="bg-[#506ced]/10 text-[#506ced] border-[#506ced]/20 hover:bg-[#506ced]/20 cursor-pointer"
+                            className="bg-primary/10 text-primary border-primary/20 hover:bg-primary/20 cursor-pointer"
                             onClick={() => navigator.clipboard.writeText(`#${tag}`)}
                           >
                             #{tag}
@@ -308,14 +305,14 @@ export function ResultDisplay({
                 <div className="flex-1 flex flex-col">
                   <div className="flex items-center justify-between mb-3">
                     <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                      <FileText className="size-4 text-[#506ced]" />
+                      <FileText className="size-4 text-primary" />
                       AI Generated Caption
                     </h3>
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => handleCopy('caption')}
-                      className="text-xs font-bold text-[#506ced] hover:underline"
+                      className="text-xs font-bold text-primary hover:underline"
                     >
                       {copied === 'caption' ? <><Check className="size-3 mr-1" /> Copied!</> : <><Copy className="size-3 mr-1" /> Copy</>}
                     </Button>
@@ -344,8 +341,8 @@ export function ResultDisplay({
                 <div className="flex-1 flex items-center justify-center">
                   <div className="flex flex-wrap gap-2 justify-center">
                     {[1, 2, 3, 4, 5].map((i) => (
-                      <div 
-                        key={i} 
+                      <div
+                        key={i}
                         className="h-6 w-20 bg-slate-200 dark:bg-slate-800 rounded-full animate-pulse"
                         style={{ animationDelay: `${i * 100}ms` }}
                       />
@@ -357,14 +354,14 @@ export function ResultDisplay({
                 <div className="flex-1 flex flex-col">
                   <div className="flex items-center justify-between mb-3">
                     <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                      <Hash className="size-4 text-[#506ced]" />
+                      <Hash className="size-4 text-primary" />
                       Hashtags ({displayHashtags.length})
                     </h3>
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => handleCopy('hashtags')}
-                      className="text-xs font-bold text-[#506ced] hover:underline"
+                      className="text-xs font-bold text-primary hover:underline"
                     >
                       {copied === 'hashtags' ? <><Check className="size-3 mr-1" /> Copied!</> : <><Copy className="size-3 mr-1" /> Copy All</>}
                     </Button>
@@ -375,7 +372,7 @@ export function ResultDisplay({
                         <Badge
                           key={i}
                           variant="secondary"
-                          className="bg-[#506ced]/10 text-[#506ced] border-[#506ced]/20 hover:bg-[#506ced]/20 cursor-pointer"
+                          className="bg-primary/10 text-primary border-primary/20 hover:bg-primary/20 cursor-pointer"
                           onClick={() => navigator.clipboard.writeText(`#${tag}`)}
                         >
                           #{tag}

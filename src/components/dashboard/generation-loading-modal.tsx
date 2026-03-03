@@ -195,17 +195,17 @@ export function GenerationLoadingModal({ isOpen, mode, hasReference, isComplete 
                 <div
                   key={step.id}
                   className={`flex items-center gap-3 p-3 rounded-xl transition-all duration-300 ${index < currentStep
-                      ? 'bg-primary/5 dark:bg-primary/10'
-                      : index === currentStep
-                        ? 'bg-primary/10 dark:bg-primary/15 ring-2 ring-primary/30'
-                        : 'bg-muted/50'
+                    ? 'bg-primary/5 dark:bg-primary/10'
+                    : index === currentStep
+                      ? 'bg-primary/10 dark:bg-primary/15 ring-2 ring-primary/30'
+                      : 'bg-muted/50'
                     }`}
                 >
                   <div className={`size-8 rounded-full flex items-center justify-center shrink-0 ${index < currentStep
-                      ? 'bg-green-500 dark:bg-green-600 text-white'
-                      : index === currentStep
-                        ? 'bg-primary text-primary-foreground animate-pulse'
-                        : 'bg-muted text-muted-foreground'
+                    ? 'bg-green-500 dark:bg-green-600 text-white'
+                    : index === currentStep
+                      ? 'bg-primary text-primary-foreground animate-pulse'
+                      : 'bg-muted text-muted-foreground'
                     }`}>
                     {index < currentStep ? (
                       <Check className="size-4" />
