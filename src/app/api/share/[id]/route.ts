@@ -25,6 +25,10 @@ export async function GET(
       return NextResponse.json({ error: 'Generation not found' }, { status: 404 })
     }
 
+    if (!generation.isPublic) {
+      return NextResponse.json({ error: 'This content is not public' }, { status: 403 })
+    }
+
     return NextResponse.json({
       id: generation.id,
       type: generation.type,

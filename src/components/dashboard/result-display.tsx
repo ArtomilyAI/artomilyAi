@@ -398,7 +398,7 @@ export function ResultDisplay({
 
       {/* Full Preview Modal */}
       <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] p-0 overflow-hidden">
+        <DialogContent className="max-w-4xl max-h-[calc(100dvh-2rem)] p-0 overflow-hidden">
           <DialogHeader className="sr-only">
             <DialogTitle>Full Preview</DialogTitle>
           </DialogHeader>

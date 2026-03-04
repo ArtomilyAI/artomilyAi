@@ -241,46 +241,47 @@ export default function DashboardPage() {
         isOpen={isGenerating}
         mode={generationMode}
         hasReference={!!referenceUrl}
+        generateMetadata={pendingGenerateMetadata}
         isComplete={isModalComplete}
         onComplete={handleModalComplete}
       />
 
       {/* Mode Toggle */}
-      <div className="inline-flex p-1 bg-slate-200/50 dark:bg-slate-800/50 rounded-xl">
+      <div className="inline-flex p-1 bg-slate-200/50 dark:bg-slate-800/50 rounded-xl w-full sm:w-auto overflow-x-auto">
         <button
-          className={`flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-semibold transition-all ${mode === 'IMAGE'
+          className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-6 py-2.5 rounded-lg text-xs sm:text-sm font-semibold transition-all whitespace-nowrap flex-1 sm:flex-none justify-center ${mode === 'IMAGE'
               ? 'bg-white dark:bg-slate-700 shadow-sm text-slate-900 dark:text-white'
               : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'
             }`}
           onClick={() => setMode('IMAGE')}
         >
           <Image className="size-4" />
-          Photo Mode
+          <span className="hidden xs:inline">Photo</span> <span className="hidden sm:inline">Mode</span>
         </button>
         <button
-          className={`flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-semibold transition-all ${mode === 'VIDEO'
+          className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-6 py-2.5 rounded-lg text-xs sm:text-sm font-semibold transition-all whitespace-nowrap flex-1 sm:flex-none justify-center ${mode === 'VIDEO'
               ? 'bg-white dark:bg-slate-700 shadow-sm text-slate-900 dark:text-white'
               : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'
             }`}
           onClick={() => setMode('VIDEO')}
         >
           <Video className="size-4" />
-          Video Mode
+          <span className="hidden xs:inline">Video</span> <span className="hidden sm:inline">Mode</span>
         </button>
         <button
-          className={`flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-semibold transition-all ${mode === 'TEXT'
+          className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-6 py-2.5 rounded-lg text-xs sm:text-sm font-semibold transition-all whitespace-nowrap flex-1 sm:flex-none justify-center ${mode === 'TEXT'
               ? 'bg-white dark:bg-slate-700 shadow-sm text-slate-900 dark:text-white'
               : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'
             }`}
           onClick={() => setMode('TEXT')}
         >
           <FileText className="size-4" />
-          Text Mode
+          <span className="hidden xs:inline">Text</span> <span className="hidden sm:inline">Mode</span>
         </button>
       </div>
 
       {/* Main Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-8">
         {/* Left: Content Prompt */}
         <div className="lg:col-span-5 space-y-6">
           <ContentPromptPanel

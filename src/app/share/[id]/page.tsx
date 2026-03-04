@@ -40,6 +40,10 @@ export default function SharePage() {
   const fetchSharedContent = async () => {
     try {
       const res = await fetch(`/api/share/${shareId}`)
+      if (res.status === 403) {
+        setError('This content is private and cannot be viewed')
+        return
+      }
       if (!res.ok) throw new Error('Content not found')
       const data = await res.json()
       setGeneration(data)
@@ -74,13 +78,14 @@ export default function SharePage() {
   }
 
   if (error || !generation) {
+    const isPrivate = error === 'This content is private and cannot be viewed'
     return (
       <div className="min-h-screen bg-[#f6f6f8] dark:bg-[#111421] flex items-center justify-center">
         <Card className="max-w-md mx-4">
           <CardContent className="p-8 text-center">
             <Frown className="size-12 mx-auto mb-4 text-muted-foreground" />
             <h1 className="text-xl font-bold text-slate-900 dark:text-white mb-2">
-              Content Not Found
+              {isPrivate ? 'Content is Private' : 'Content Not Found'}
             </h1>
             <p className="text-slate-500 mb-6">
               {error || 'This shared content may have been removed or expired.'}

@@ -1,8 +1,7 @@
 'use client'
 
 import { Badge } from '@/components/ui/badge'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { FileText, Video, Search, FolderOpen } from 'lucide-react'
+import { FileText, Video, Search, FolderOpen, UsersRound } from 'lucide-react'
 
 interface Generation {
   id: string
@@ -24,11 +23,11 @@ interface LibraryGridProps {
 export function LibraryGrid({ generations, loading, onSelect }: LibraryGridProps) {
   if (loading) {
     return (
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-4">
         {[...Array(8)].map((_, i) => (
           <div
             key={i}
-            className="aspect-square rounded-xl bg-slate-100 dark:bg-slate-800 animate-pulse"
+            className="aspect-square rounded-lg sm:rounded-xl bg-slate-100 dark:bg-slate-800 animate-pulse"
           />
         ))}
       </div>
@@ -46,11 +45,11 @@ export function LibraryGrid({ generations, loading, onSelect }: LibraryGridProps
   }
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-4">
       {generations.map((gen) => (
         <div
           key={gen.id}
-          className="group relative rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 cursor-pointer hover:ring-2 hover:ring-primary/50 transition-all"
+          className="group relative rounded-lg sm:rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 cursor-pointer hover:ring-2 hover:ring-primary/50 transition-all"
           onClick={() => onSelect?.(gen)}
         >
           {/* Thumbnail */}
@@ -84,10 +83,10 @@ export function LibraryGrid({ generations, loading, onSelect }: LibraryGridProps
                 <Badge
                   variant="secondary"
                   className={`text-xs border-0 ${gen.status === 'COMPLETED'
-                      ? 'bg-green-500/20 text-green-300'
-                      : gen.status === 'FAILED'
-                        ? 'bg-red-500/20 text-red-300'
-                        : 'bg-yellow-500/20 text-yellow-300'
+                    ? 'bg-green-500/20 text-green-300'
+                    : gen.status === 'FAILED'
+                      ? 'bg-red-500/20 text-red-300'
+                      : 'bg-yellow-500/20 text-yellow-300'
                     }`}
                 >
                   {gen.status}
@@ -98,10 +97,8 @@ export function LibraryGrid({ generations, loading, onSelect }: LibraryGridProps
           </div>
 
           {gen.isPublic && (
-            <div className="absolute top-2 left-2">
-              <Badge variant="secondary" className="text-xs bg-">
-                Public
-              </Badge>
+            <div className="absolute top-2 right-2">
+              <UsersRound className="size-6 text-blue-600" />
             </div>
           )}
 
@@ -146,11 +143,11 @@ export function LibraryList({ generations, loading, onSelect }: LibraryGridProps
       {generations.map((gen) => (
         <div
           key={gen.id}
-          className="flex items-start gap-4 p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 cursor-pointer hover:ring-2 hover:ring-primary/50 transition-all"
+          className="flex items-start gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg sm:rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 cursor-pointer hover:ring-2 hover:ring-primary/50 transition-all"
           onClick={() => onSelect?.(gen)}
         >
           {/* Thumbnail */}
-          <div className="w-16 h-16 rounded-lg overflow-hidden bg-slate-100 dark:bg-slate-800 flex-shrink-0">
+          <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-lg overflow-hidden bg-slate-100 dark:bg-slate-800 flex-shrink-0">
             {gen.type === 'IMAGE' && gen.resultUrl ? (
               <img src={gen.resultUrl} alt="" className="w-full h-full object-cover" />
             ) : (
@@ -192,7 +189,7 @@ export function LibraryList({ generations, loading, onSelect }: LibraryGridProps
           </div>
 
           {/* Credits */}
-          <div className="text-right flex-shrink-0">
+          <div className="text-right flex-shrink-0 hidden sm:block">
             <span className="text-sm font-semibold text-slate-600 dark:text-slate-400">
               -{gen.cost} credits
             </span>

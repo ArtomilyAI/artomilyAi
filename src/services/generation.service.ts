@@ -264,6 +264,28 @@ export class GenerationService {
   }
 
   /**
+   * Set generation as public (for sharing)
+   */
+  static async setPublic(generationId: string, userId: string) {
+    const generation = await prisma.generation.findFirst({
+      where: { id: generationId, userId },
+    })
+
+    if (!generation) {
+      throw new Error('Generation not found')
+    }
+
+    if (generation.isPublic) {
+      return generation
+    }
+
+    return prisma.generation.update({
+      where: { id: generationId },
+      data: { isPublic: true },
+    })
+  }
+
+  /**
    * Delete generation
    */
   static async deleteGeneration(generationId: string, userId: string) {

@@ -218,11 +218,11 @@ export default function TemplatesPage() {
 
       {/* Template Detail Dialog */}
       <Dialog open={!!selectedTemplate} onOpenChange={() => setSelectedTemplate(null)}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl max-h-[calc(100dvh-2rem)] overflow-y-auto">
           {selectedTemplate && (
             <>
               <DialogHeader>
-                <DialogTitle>{selectedTemplate.name}</DialogTitle>
+                <DialogTitle className="pr-6">{selectedTemplate.name}</DialogTitle>
               </DialogHeader>
 
               <div className="space-y-4">
@@ -231,13 +231,13 @@ export default function TemplatesPage() {
                   <img
                     src={selectedTemplate.thumbnail}
                     alt={selectedTemplate.name}
-                    className="w-full max-h-48 object-cover rounded-lg"
+                    className="w-full max-h-40 sm:max-h-48 object-cover rounded-lg"
                   />
                 )}
 
                 {/* Description */}
                 {selectedTemplate.description && (
-                  <p className="text-slate-600 dark:text-slate-400">
+                  <p className="text-sm sm:text-base text-slate-600 dark:text-slate-400">
                     {selectedTemplate.description}
                   </p>
                 )}
@@ -250,7 +250,7 @@ export default function TemplatesPage() {
                   <Textarea
                     value={customPrompt}
                     onChange={(e) => setCustomPrompt(e.target.value)}
-                    className="mt-2 min-h-[120px]"
+                    className="mt-2 min-h-[100px] sm:min-h-[120px]"
                   />
                   <p className="text-xs text-slate-400 mt-1">
                     Use {'{variable}'} syntax for customizable parts
@@ -267,7 +267,7 @@ export default function TemplatesPage() {
                 </div>
 
                 {/* Actions */}
-                <div className="flex gap-2">
+                <div className="flex flex-col sm:flex-row gap-2">
                   <Button
                     className="flex-1 bg-primary hover:bg-primary/90"
                     onClick={handleUseTemplate}

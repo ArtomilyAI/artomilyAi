@@ -8,6 +8,7 @@ interface GenerationLoadingModalProps {
   isOpen: boolean
   mode: 'TEXT' | 'IMAGE' | 'VIDEO'
   hasReference: boolean
+  generateMetadata?: boolean
   isComplete?: boolean
   onComplete?: () => void
 }
@@ -19,7 +20,7 @@ interface Step {
   status: 'pending' | 'active' | 'completed'
 }
 
-export function GenerationLoadingModal({ isOpen, mode, hasReference, isComplete = false, onComplete }: GenerationLoadingModalProps) {
+export function GenerationLoadingModal({ isOpen, mode, hasReference, generateMetadata = true, isComplete = false, onComplete }: GenerationLoadingModalProps) {
   const [currentStep, setCurrentStep] = useState(0)
   const [progress, setProgress] = useState(0)
   const [elapsedTime, setElapsedTime] = useState(0)
@@ -34,15 +35,19 @@ export function GenerationLoadingModal({ isOpen, mode, hasReference, isComplete 
         baseSteps.push({ id: 'analyze', label: 'Analyzing Reference', description: 'Processing your image...', status: 'pending' })
       }
       baseSteps.push({ id: 'generate', label: 'Generating Image', description: 'Creating your image with AI...', status: 'pending' })
-      baseSteps.push({ id: 'caption', label: 'Creating Caption', description: 'Writing engaging caption...', status: 'pending' })
-      baseSteps.push({ id: 'hashtags', label: 'Generating Hashtags', description: 'Finding relevant hashtags...', status: 'pending' })
+      if (generateMetadata) {
+        baseSteps.push({ id: 'caption', label: 'Creating Caption', description: 'Writing engaging caption...', status: 'pending' })
+        baseSteps.push({ id: 'hashtags', label: 'Generating Hashtags', description: 'Finding relevant hashtags...', status: 'pending' })
+      }
     } else if (mode === 'VIDEO') {
       if (hasReference) {
         baseSteps.push({ id: 'analyze', label: 'Analyzing Reference', description: 'Processing your image...', status: 'pending' })
       }
       baseSteps.push({ id: 'generate', label: 'Generating Video', description: 'This may take 3-5 minutes...', status: 'pending' })
-      baseSteps.push({ id: 'caption', label: 'Creating Caption', description: 'Writing video caption...', status: 'pending' })
-      baseSteps.push({ id: 'hashtags', label: 'Generating Hashtags', description: 'Finding relevant hashtags...', status: 'pending' })
+      if (generateMetadata) {
+        baseSteps.push({ id: 'caption', label: 'Creating Caption', description: 'Writing video caption...', status: 'pending' })
+        baseSteps.push({ id: 'hashtags', label: 'Generating Hashtags', description: 'Finding relevant hashtags...', status: 'pending' })
+      }
     } else {
       baseSteps.push({ id: 'generate', label: 'Generating Text', description: 'Creating your content...', status: 'pending' })
       baseSteps.push({ id: 'hashtags', label: 'Extracting Hashtags', description: 'Finding relevant hashtags...', status: 'pending' })
@@ -155,8 +160,8 @@ export function GenerationLoadingModal({ isOpen, mode, hasReference, isComplete 
 
   return (
     <Dialog open={isOpen} onOpenChange={() => { }}>
-      <DialogContent className="sm:max-w-md p-0 overflow-hidden border-0 bg-transparent shadow-none [&>button]:hidden">
-        <div className="bg-card dark:bg-card border border-border rounded-2xl p-6 shadow-2xl">
+      <DialogContent className="sm:max-w-md p-0 overflow-hidden border-0 bg-transparent shadow-none [&>button]:hidden max-h-[calc(100dvh-2rem)]">
+        <div className="bg-card dark:bg-card border border-border rounded-2xl p-4 sm:p-6 shadow-2xl max-h-[calc(100dvh-3rem)] overflow-y-auto">
           {/* Header */}
           <div className="text-center mb-6">
             <div className="inline-flex items-center justify-center size-16 rounded-full bg-primary/10 dark:bg-primary/20 mb-4 animate-pulse">

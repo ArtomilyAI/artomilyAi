@@ -36,37 +36,41 @@ export default function LibraryPage() {
     setSelectedGeneration(null)
   }
 
-  const handleShare = async () => {
-    console.log('Sharing generation:', selectedGeneration)
-    if (selectedGeneration?.id) {
-      const url = `${window.location.origin}/share/${selectedGeneration.id}`
-      await navigator.clipboard.writeText(url)
-
-      alert('Shareable URL copied to clipboard!')
-    }
+  const handleShare = async (id: string) => {
+    const url = `${window.location.origin}/share/${id}`
+    await navigator.clipboard.writeText(url)
+    alert('Shareable URL copied to clipboard!')
   }
 
   const handleTogglePublic = async (id: string) => {
-    togglePublicMutation.mutate(id)
-    await handleShare()
+    togglePublicMutation.mutate(id, {
+      onSuccess: (data) => {
+        // If it became public, auto-share the link
+        if (data?.isPublic) {
+          handleShare(id)
+        }
+        // Update selectedGeneration state to reflect the change
+        setSelectedGeneration(prev => prev ? { ...prev, isPublic: data?.isPublic ?? !prev.isPublic } : null)
+      }
+    })
   }
 
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="flex flex-col gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-            <FolderOpen className="size-6 text-primary" /> My Library
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <FolderOpen className="size-5 sm:size-6 text-primary" /> My Library
           </h1>
           <p className="text-slate-500 text-sm mt-1">
             {generations.length} generations
           </p>
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
           {/* Type Filter */}
-          <div className="grid gap-2 grid-cols-2 lg:grid-cols-4 items-start justify-start">
+          <div className="flex gap-2 flex-wrap">
             {(['all', 'TEXT', 'IMAGE', 'VIDEO'] as const).map((type) => (
               <Button
                 key={type}
@@ -81,7 +85,7 @@ export default function LibraryPage() {
           </div>
 
           {/* View Mode Toggle */}
-          <div className="flex gap-1 p-1 bg-slate-100 dark:bg-slate-800 rounded-lg">
+          <div className="flex gap-1 p-1 bg-slate-100 dark:bg-slate-800 rounded-lg shrink-0">
             <Button
               variant={viewMode === 'grid' ? 'default' : 'ghost'}
               size="sm"
@@ -111,7 +115,7 @@ export default function LibraryPage() {
 
       {/* Content */}
       <Card className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800">
-        <CardContent className="p-6">
+        <CardContent className="p-3 sm:p-6">
           {viewMode === 'grid' ? (
             <LibraryGrid
               generations={generations}
@@ -130,11 +134,11 @@ export default function LibraryPage() {
 
       {/* Detail Dialog */}
       <Dialog open={!!selectedGeneration} onOpenChange={() => setSelectedGeneration(null)}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl max-h-[calc(100dvh-2rem)] overflow-y-auto">
           {selectedGeneration && (
             <>
               <DialogHeader>
-                <DialogTitle className="flex items-center gap-2">
+                <DialogTitle className="flex items-center gap-2 flex-wrap">
                   <Badge variant="outline">{selectedGeneration.type}</Badge>
                   <Badge
                     variant={
@@ -156,18 +160,18 @@ export default function LibraryPage() {
                   <img
                     src={selectedGeneration.resultUrl}
                     alt={selectedGeneration.prompt}
-                    className="w-full rounded-lg"
+                    className="w-full max-h-[40vh] object-contain rounded-lg bg-slate-100 dark:bg-slate-800"
                   />
                 )}
 
                 {/* Video Preview */}
                 {selectedGeneration.type === 'VIDEO' && selectedGeneration.resultUrl && (
-                  <video src={selectedGeneration.resultUrl} controls className="w-full rounded-lg" />
+                  <video src={selectedGeneration.resultUrl} controls className="w-full max-h-[40vh] rounded-lg" />
                 )}
 
                 {/* Text Result */}
                 {selectedGeneration.type === 'TEXT' && selectedGeneration.resultUrl && (
-                  <div className="p-4 rounded-lg bg-slate-50 dark:bg-slate-950 border">
+                  <div className="p-3 sm:p-4 rounded-lg bg-slate-50 dark:bg-slate-950 border max-h-[30vh] overflow-y-auto">
                     <p className="whitespace-pre-wrap text-sm">{selectedGeneration.resultUrl}</p>
                   </div>
                 )}
@@ -175,23 +179,24 @@ export default function LibraryPage() {
                 {/* Prompt */}
                 <div>
                   <label className="text-sm font-medium text-slate-500">Prompt</label>
-                  <p className="text-sm mt-1">{selectedGeneration.prompt}</p>
+                  <p className="text-sm mt-1 break-words">{selectedGeneration.prompt}</p>
                 </div>
 
                 {/* Meta */}
-                <div className="flex items-center gap-4 text-sm text-slate-500">
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs sm:text-sm text-slate-500">
                   <span>Cost: {selectedGeneration.cost} credits</span>
                   <span>Date: {new Date(selectedGeneration.createdAt).toLocaleDateString()}</span>
                   <span>Public: {selectedGeneration.isPublic ? 'Yes' : 'No'}</span>
                 </div>
 
                 {/* Actions */}
-                <div className="flex gap-2">
+                <div className="flex flex-col sm:flex-row gap-2">
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => handleTogglePublic(selectedGeneration.id)}
                     disabled={togglePublicMutation.isPending}
+                    className="w-full sm:w-auto"
                   >
                     {selectedGeneration.isPublic ? 'Make Private' : 'Make Public & Share'}
                   </Button>
@@ -200,6 +205,7 @@ export default function LibraryPage() {
                     size="sm"
                     onClick={() => handleDelete(selectedGeneration.id)}
                     disabled={deleteMutation.isPending}
+                    className="w-full sm:w-auto"
                   >
                     Delete
                   </Button>
