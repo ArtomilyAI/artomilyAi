@@ -33,9 +33,9 @@ services:
       - "traefik.enable=true"
       - "traefik.docker.network=traefik_proxy"
       - "traefik.http.routers.buatinai.rule=Host(`buatinai.radenalam.com`)"
-      - "traefik.http.routers.buatinai.entrypoints=web,websecure"
-      - "traefik.http.routers.buatinai.tls=true"
-      - "traefik.http.services.buatinai.loadbalancer.server.port=3000"
+      - "traefik.http.routers.buatinai.entrypoints=web"
+      - "traefik.http.routers.buatinai.service=buatinai-svc"
+      - "traefik.http.services.buatinai-svc.loadbalancer.server.port=3000"
 
   # Worker for BullMQ Job Processing
   worker:
