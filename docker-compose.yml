@@ -1,7 +1,6 @@
-version: "3.8"
+version: "3.9"
 
 services:
-  # Next.js Application
   app:
     build:
       context: .
@@ -10,17 +9,33 @@ services:
     container_name: artomily-app
     restart: unless-stopped
     environment:
-      - NODE_ENV=production
-      - DATABASE_URL=${DATABASE_URL}
-      - NEXTAUTH_URL=${NEXTAUTH_URL}
-      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
-      - REDIS_URL=${REDIS_URL}
-      - ALIBABA_API_KEY=${ALIBABA_API_KEY}
-      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
-      - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET}
-      - NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=${NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY}
+      NODE_ENV: production
+      DATABASE_URL: ${DATABASE_URL}
+      NEXTAUTH_URL: ${NEXTAUTH_URL}
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
+      REDIS_URL: ${REDIS_URL}
+      ALIBABA_API_KEY: ${ALIBABA_API_KEY}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET}
+      NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY}
+      TZ: Asia/Jakarta
+
     ports:
-      - "3000:3000"
+      - "3005:3000" # local debug tetap bisa
+
+    expose:
+      - "3000"
+    networks:
+      - app_internal
+      - traefik_proxy
+
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=traefik_proxy"
+      - "traefik.http.routers.buatinai.rule=Host(`buatinai.radenalam.com`)"
+      - "traefik.http.routers.buatinai.entrypoints=web,websecure"
+      - "traefik.http.routers.buatinai.tls=true"
+      - "traefik.http.services.buatinai.loadbalancer.server.port=3000"
 
   # Worker for BullMQ Job Processing
   worker:
@@ -31,7 +46,24 @@ services:
     container_name: artomily-worker
     restart: unless-stopped
     environment:
-      - NODE_ENV=production
-      - DATABASE_URL=${DATABASE_URL}
-      - REDIS_URL=${REDIS_URL}
-      - ALIBABA_API_KEY=${ALIBABA_API_KEY}
+      NODE_ENV: production
+      DATABASE_URL: ${DATABASE_URL}
+      REDIS_URL: ${REDIS_URL}
+      ALIBABA_API_KEY: ${ALIBABA_API_KEY}
+      TZ: Asia/Jakarta
+    networks:
+      - app_internal
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    # optional: kalau worker butuh nunggu app/redis ready
+    depends_on:
+      - app
+
+networks:
+  app_internal:
+    driver: bridge
+  traefik_proxy:
+    external: true
