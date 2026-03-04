@@ -9,6 +9,16 @@ pipeline {
     CONTAINER_NAME = 'artomily-app'
     WORKER_NAME = 'artomily-worker'
     COMPOSE_FILE   = "${WORKSPACE}/docker-compose.yml"
+
+    // Credentials dari Jenkins Secret Text
+    DATABASE_URL = credentials('DATABASE_URL')
+    NEXTAUTH_URL = credentials('NEXTAUTH_URL')
+    NEXTAUTH_SECRET = credentials('NEXTAUTH_SECRET')
+    REDIS_URL = credentials('REDIS_URL')
+    ALIBABA_API_KEY = credentials('ALIBABA_API_KEY')
+    STRIPE_SECRET_KEY = credentials('STRIPE_SECRET_KEY')
+    STRIPE_WEBHOOK_SECRET = credentials('STRIPE_WEBHOOK_SECRET')
+    NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY = credentials('NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY')
   }
 
   stages {
@@ -47,54 +57,7 @@ pipeline {
       }
     }
 
-    stage('Health Check') {
-      steps {
-        sh '''
-          set -e
 
-  # Ambil container ID dari service name
-          echo "Getting container ID for service..."
-          CID=$(docker compose -f "${COMPOSE_FILE}" ps -q app)
-
-          # Fallback: use container name if service name doesn't work
-          if [ -z "$CID" ]; then
-            echo "Container ID from service not found, trying container name..."
-            CID=$(docker ps -q --filter "name=${CONTAINER_NAME}")
-          fi
-
-          if [ -z "$CID" ]; then
-            echo "Container ID not found. Current ps:"
-            docker compose -f "${COMPOSE_FILE}" ps
-            echo "All containers:"
-            docker ps -a
-            exit 1
-          fi
-
-          echo "Found container ID: $CID"
-
-          # Tunggu container RUNNING + punya .State.Health
-          i=0
-          while [ $i -lt 60 ]; do
-            STATE=$(docker inspect --format='{{.State.Status}}' "$CID" || echo "unknown")
-            HEALTH=$(docker inspect --format='{{if .State.Health}}{{.State.Health.Status}}{{else}}nohealth{{end}}' "$CID" || echo "unknown")
-            echo "Attempt $((i+1)): state=${STATE}, health=${HEALTH}"
-
-            # Keluar sukses kalau sehat
-            if [ "$HEALTH" = "healthy" ]; then
-              exit 0
-            fi
-
-            # Kalau belum ada health (nohealth), tunggu sebentar (healthcheck compose butuh waktu attach)
-            sleep 5
-            i=$((i+1))
-          done
-
-          echo "Container not healthy after retries. Recent logs:"
-          docker logs "$CID" --tail=200 || true
-          exit 1
-        '''
-      }
-    }
   }
 
   post {
