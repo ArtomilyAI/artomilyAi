@@ -6,7 +6,6 @@ pipeline {
     DOCKER_BUILDKIT = '1'
     COMPOSE_DOCKER_CLI_BUILD = '1'
     CONTAINER_NAME = 'artomily-app'
-    WORKER_NAME = 'artomily-worker'
     COMPOSE_FILE   = "${WORKSPACE}/docker-compose.yml"
   }
 
@@ -63,7 +62,7 @@ pipeline {
             echo "Cleaning up existing containers..."
             docker compose -f "${COMPOSE_FILE}" down --remove-orphans || true
 
-            for CN in "${CONTAINER_NAME}" "${WORKER_NAME}"; do
+            for CN in "${CONTAINER_NAME}"; do
               if docker ps -a --format "{{.Names}}" | grep -q "^${CN}$"; then
                 echo "Force stopping and removing container: ${CN}"
                 docker stop "${CN}" || true
@@ -77,7 +76,7 @@ pipeline {
 
             # Start the containers
             echo "Starting containers..."
-            docker compose -f "${COMPOSE_FILE}" up -d
+            docker compose -f "${COMPOSE_FILE}" up -d --scale worker=2
 
             # Show running containers
             echo "Container status:"
@@ -94,7 +93,6 @@ pipeline {
 
           echo "Checking containers..."
           CID_APP=$(docker ps -q --filter "name=${CONTAINER_NAME}")
-          CID_WORKER=$(docker ps -q --filter "name=${WORKER_NAME}")
 
           if [ -z "$CID_APP" ]; then
             echo "App container not found!"
@@ -102,20 +100,21 @@ pipeline {
             exit 1
           fi
 
-          if [ -z "$CID_WORKER" ]; then
-            echo "Worker container not found!"
-            docker ps -a
+          # Check worker replicas
+          WORKER_COUNT=$(docker compose -f "${COMPOSE_FILE}" ps -q worker | wc -l)
+          echo "Found App container: $CID_APP"
+          echo "Found ${WORKER_COUNT} worker container(s)"
+
+          if [ "$WORKER_COUNT" -lt 1 ]; then
+            echo "ERROR: No worker containers found!"
+            docker compose -f "${COMPOSE_FILE}" ps
             exit 1
           fi
-
-          echo "Found App container:    $CID_APP"
-          echo "Found Worker container: $CID_WORKER"
 
           i=0
           while [ $i -lt 6 ]; do
             STATE_APP=$(docker inspect --format='{{.State.Status}}' "$CID_APP" || echo "unknown")
-            STATE_WORKER=$(docker inspect --format='{{.State.Status}}' "$CID_WORKER" || echo "unknown")
-            echo "Attempt $((i+1)): app=${STATE_APP}, worker=${STATE_WORKER}"
+            echo "Attempt $((i+1)): app=${STATE_APP}"
 
             if [ "$STATE_APP" != "running" ]; then
               echo "ERROR: App container is not running!"
@@ -123,9 +122,19 @@ pipeline {
               exit 1
             fi
 
-            if [ "$STATE_WORKER" != "running" ]; then
-              echo "ERROR: Worker container is not running!"
-              docker logs "$CID_WORKER" --tail=200 || true
+            # Check all worker replicas
+            ALL_WORKERS_OK=true
+            for WID in $(docker compose -f "${COMPOSE_FILE}" ps -q worker); do
+              W_STATE=$(docker inspect --format='{{.State.Status}}' "$WID" || echo "unknown")
+              echo "  worker $WID: ${W_STATE}"
+              if [ "$W_STATE" != "running" ]; then
+                echo "ERROR: Worker $WID is not running!"
+                docker logs "$WID" --tail=200 || true
+                ALL_WORKERS_OK=false
+              fi
+            done
+
+            if [ "$ALL_WORKERS_OK" = false ]; then
               exit 1
             fi
 
@@ -148,7 +157,14 @@ pipeline {
         # Collect logs for debugging
         docker compose -f "${COMPOSE_FILE}" ps > deploy-logs/compose-ps.txt 2>/dev/null || true
         docker logs "${CONTAINER_NAME}" --since=30m > "deploy-logs/${CONTAINER_NAME}.log" 2>/dev/null || true
-        docker logs "${WORKER_NAME}" --since=30m > "deploy-logs/${WORKER_NAME}.log" 2>/dev/null || true
+
+        # Collect worker logs (multiple replicas)
+        WIDX=1
+        for WID in $(docker compose -f "${COMPOSE_FILE}" ps -q worker 2>/dev/null); do
+          docker logs "$WID" --since=30m > "deploy-logs/worker-${WIDX}.log" 2>/dev/null || true
+          WIDX=$((WIDX+1))
+        done
+
         docker ps -a > deploy-logs/all-containers.txt 2>/dev/null || true
         docker network ls > deploy-logs/networks.txt 2>/dev/null || true
       '''

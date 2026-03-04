@@ -46,7 +46,8 @@ services:
       context: .
       dockerfile: Dockerfile
       target: worker
-    container_name: artomily-worker
+    deploy:
+      replicas: 2
     restart: unless-stopped
     dns:
       - 8.8.8.8
