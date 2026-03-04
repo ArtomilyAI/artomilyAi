@@ -23,7 +23,7 @@ export default async function Home() {
   }
 
   return (
-    <div className="relative flex not-last:flex-col bg-white dark:bg-slate-950">
+    <div className="relative flex flex-col bg-white dark:bg-slate-950">
       <Navbar />
       <main className="flex-grow">
         <HeroSection />
