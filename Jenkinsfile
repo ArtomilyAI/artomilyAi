@@ -62,30 +62,35 @@ pipeline {
 
   post {
     always {
-      sh '''
-        set -e
-        mkdir -p deploy-logs
+      node(null) {
+        sh '''
+          mkdir -p deploy-logs
 
-        # Collect logs for debugging
-        docker compose -f "${COMPOSE_FILE}" ps > deploy-logs/compose-ps.txt 2>/dev/null || true
-        docker logs "${CONTAINER_NAME}" --since=30m > "deploy-logs/${CONTAINER_NAME}.log" 2>/dev/null || true
-        docker logs "${WORKER_NAME}" --since=30m > "deploy-logs/${WORKER_NAME}.log" 2>/dev/null || true
-        docker ps -a > deploy-logs/all-containers.txt 2>/dev/null || true
-        docker network ls > deploy-logs/networks.txt 2>/dev/null || true
-      '''
-      archiveArtifacts artifacts: 'deploy-logs/**', onlyIfSuccessful: false
+          # Collect logs for debugging
+          docker compose -f "${COMPOSE_FILE}" ps > deploy-logs/compose-ps.txt 2>/dev/null || true
+          docker logs "${CONTAINER_NAME}" --since=30m > "deploy-logs/${CONTAINER_NAME}.log" 2>/dev/null || true
+          docker logs "${WORKER_NAME}" --since=30m > "deploy-logs/${WORKER_NAME}.log" 2>/dev/null || true
+          docker ps -a > deploy-logs/all-containers.txt 2>/dev/null || true
+          docker network ls > deploy-logs/networks.txt 2>/dev/null || true
+        '''
+        archiveArtifacts artifacts: 'deploy-logs/**', onlyIfSuccessful: false
+      }
     }
     failure {
-      sh '''
-        echo "Build failed, cleaning up..."
-        docker compose -f "${COMPOSE_FILE}" down --remove-orphans || true
-      '''
+      node(null) {
+        sh '''
+          echo "Build failed, cleaning up..."
+          docker compose -f "${COMPOSE_FILE}" down --remove-orphans || true
+        '''
+      }
     }
     aborted {
-      sh '''
-        echo "Build aborted, cleaning up..."
-        docker compose -f "${COMPOSE_FILE}" down --remove-orphans || true
-      '''
+      node(null) {
+        sh '''
+          echo "Build aborted, cleaning up..."
+          docker compose -f "${COMPOSE_FILE}" down --remove-orphans || true
+        '''
+      }
     }
   }
 }
