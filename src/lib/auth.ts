@@ -7,6 +7,7 @@ import { Plan } from "@prisma/client"
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   adapter: PrismaAdapter(prisma) as any,
+  trustHost: true,
   session: {
     strategy: "jwt",
   },
