@@ -1,147 +1,160 @@
 pipeline {
-    agent any
-    options {
-        timestamps()
-        disableConcurrentBuilds()
-        timeout(time: 30, unit: 'MINUTES')
+  agent any
+  options { timestamps() }
+
+  environment {
+    DOCKER_BUILDKIT = '1'
+    COMPOSE_DOCKER_CLI_BUILD = '1'
+    CONTAINER_NAME = 'artomily-app'
+    WORKER_NAME = 'artomily-worker'
+    COMPOSE_FILE   = "${WORKSPACE}/docker-compose.yml"
+  }
+
+  stages {
+    stage('Prepare') {
+      steps {
+        sh '''
+          set -e
+          mkdir -p deploy-logs
+          docker compose version
+          ls -la "${COMPOSE_FILE}"
+
+          # Create external network if not exists (required for traefik_proxy)
+          if ! docker network ls | grep -q "traefik_proxy"; then
+            echo "Creating external network: traefik_proxy"
+            docker network create traefik_proxy
+          else
+            echo "External network traefik_proxy already exists"
+          fi
+        '''
+      }
     }
 
-    environment {
-        DOCKER_BUILDKIT        = '1'
-        COMPOSE_DOCKER_CLI_BUILD = '1'
-        CONTAINER_NAME         = 'artomily-app'
-        WORKER_NAME            = 'artomily-worker'
-        COMPOSE_FILE           = "${WORKSPACE}/docker-compose.yml"
+    stage('Build & Deploy') {
+      steps {
+        withCredentials([
+          string(credentialsId: 'DATABASE_URL',                       variable: 'DATABASE_URL'),
+          string(credentialsId: 'NEXTAUTH_URL',                      variable: 'NEXTAUTH_URL'),
+          string(credentialsId: 'NEXTAUTH_SECRET',                   variable: 'NEXTAUTH_SECRET'),
+          string(credentialsId: 'REDIS_URL',                         variable: 'REDIS_URL'),
+          string(credentialsId: 'ALIBABA_API_KEY',                   variable: 'ALIBABA_API_KEY'),
+          string(credentialsId: 'STRIPE_SECRET_KEY',                 variable: 'STRIPE_SECRET_KEY'),
+          string(credentialsId: 'STRIPE_WEBHOOK_SECRET',             variable: 'STRIPE_WEBHOOK_SECRET'),
+          string(credentialsId: 'NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY', variable: 'NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY')
+        ]) {
+          sh '''
+            set -e
+
+            # Aggressive container cleanup to prevent name conflicts
+            echo "Cleaning up existing containers..."
+            docker compose -f "${COMPOSE_FILE}" down --remove-orphans || true
+
+            # Force stop and remove specific containers if they still exist
+            for CN in "${CONTAINER_NAME}" "${WORKER_NAME}"; do
+              if docker ps -a --format "{{.Names}}" | grep -q "^${CN}$"; then
+                echo "Force stopping and removing container: ${CN}"
+                docker stop "${CN}" || true
+                docker rm "${CN}" || true
+              fi
+            done
+
+            # Build the new image
+            echo "Building Docker image..."
+            docker compose -f "${COMPOSE_FILE}" build --pull --no-cache
+
+            # Start the containers — env vars from withCredentials are
+            # automatically available to docker compose via shell environment
+            echo "Starting containers..."
+            docker compose -f "${COMPOSE_FILE}" up -d
+
+            # Show running containers
+            echo "Container status:"
+            docker compose -f "${COMPOSE_FILE}" ps
+          '''
+        }
+      }
     }
 
-    stages {
-        stage('Checkout') {
-            steps {
-                checkout scm
-            }
-        }
+    stage('Health Check') {
+      steps {
+        sh '''
+          set -e
 
-        stage('Prepare Environment') {
-            steps {
-                withCredentials([
-                    string(credentialsId: 'DATABASE_URL',                       variable: 'DATABASE_URL'),
-                    string(credentialsId: 'NEXTAUTH_URL',                      variable: 'NEXTAUTH_URL'),
-                    string(credentialsId: 'NEXTAUTH_SECRET',                   variable: 'NEXTAUTH_SECRET'),
-                    string(credentialsId: 'REDIS_URL',                         variable: 'REDIS_URL'),
-                    string(credentialsId: 'ALIBABA_API_KEY',                   variable: 'ALIBABA_API_KEY'),
-                    string(credentialsId: 'STRIPE_SECRET_KEY',                 variable: 'STRIPE_SECRET_KEY'),
-                    string(credentialsId: 'STRIPE_WEBHOOK_SECRET',             variable: 'STRIPE_WEBHOOK_SECRET'),
-                    string(credentialsId: 'NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY', variable: 'NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY')
-                ]) {
-                    // Write .env file for docker-compose
-                    sh '''
-                        set -e
-                        cat > "${WORKSPACE}/.env" <<EOF
-DATABASE_URL=${DATABASE_URL}
-NEXTAUTH_URL=${NEXTAUTH_URL}
-NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
-REDIS_URL=${REDIS_URL}
-ALIBABA_API_KEY=${ALIBABA_API_KEY}
-STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
-STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET}
-NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=${NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY}
-EOF
-                        echo ".env file created successfully"
-                    '''
-                }
-            }
-        }
+          echo "Getting container IDs..."
+          CID_APP=$(docker ps -q --filter "name=${CONTAINER_NAME}")
+          CID_WORKER=$(docker ps -q --filter "name=${WORKER_NAME}")
 
-        stage('Prepare Network') {
-            steps {
-                sh '''
-                    set -e
-                    docker compose version
+          if [ -z "$CID_APP" ]; then
+            echo "App container not found. Current containers:"
+            docker compose -f "${COMPOSE_FILE}" ps
+            docker ps -a
+            exit 1
+          fi
 
-                    # Create external network if not exists
-                    if ! docker network ls --format '{{.Name}}' | grep -qx "traefik_proxy"; then
-                        echo "Creating external network: traefik_proxy"
-                        docker network create traefik_proxy
-                    else
-                        echo "External network traefik_proxy already exists"
-                    fi
-                '''
-            }
-        }
+          if [ -z "$CID_WORKER" ]; then
+            echo "Worker container not found. Current containers:"
+            docker compose -f "${COMPOSE_FILE}" ps
+            docker ps -a
+            exit 1
+          fi
 
-        stage('Build & Deploy') {
-            steps {
-                sh '''
-                    set -e
+          echo "Found App container:    $CID_APP"
+          echo "Found Worker container: $CID_WORKER"
 
-                    echo "==> Building and starting containers..."
-                    docker compose -f "${COMPOSE_FILE}" up -d --build --remove-orphans
+          # Wait and verify both containers remain running
+          i=0
+          while [ $i -lt 12 ]; do
+            STATE_APP=$(docker inspect --format='{{.State.Status}}' "$CID_APP" || echo "unknown")
+            STATE_WORKER=$(docker inspect --format='{{.State.Status}}' "$CID_WORKER" || echo "unknown")
+            echo "Attempt $((i+1)): app=${STATE_APP}, worker=${STATE_WORKER}"
 
-                    echo "==> Waiting for containers to become healthy..."
-                    sleep 10
+            if [ "$STATE_APP" != "running" ]; then
+              echo "ERROR: App container is not running!"
+              docker logs "$CID_APP" --tail=200 || true
+              exit 1
+            fi
 
-                    echo "==> Container status:"
-                    docker compose -f "${COMPOSE_FILE}" ps
-                '''
-            }
-        }
+            if [ "$STATE_WORKER" != "running" ]; then
+              echo "ERROR: Worker container is not running!"
+              docker logs "$CID_WORKER" --tail=200 || true
+              exit 1
+            fi
 
-        stage('Health Check') {
-            steps {
-                sh '''
-                    set -e
+            sleep 5
+            i=$((i+1))
+          done
 
-                    echo "==> Checking container status..."
-                    # Verify containers are running (not restarting/exited)
-                    RUNNING_APP=$(docker inspect --format='{{.State.Status}}' "${CONTAINER_NAME}" 2>/dev/null || echo "not_found")
-                    RUNNING_WORKER=$(docker inspect --format='{{.State.Status}}' "${WORKER_NAME}" 2>/dev/null || echo "not_found")
-
-                    echo "App container status: ${RUNNING_APP}"
-                    echo "Worker container status: ${RUNNING_WORKER}"
-
-                    if [ "${RUNNING_APP}" != "running" ]; then
-                        echo "ERROR: App container is not running!"
-                        docker logs "${CONTAINER_NAME}" --tail 50 2>/dev/null || true
-                        exit 1
-                    fi
-
-                    if [ "${RUNNING_WORKER}" != "running" ]; then
-                        echo "ERROR: Worker container is not running!"
-                        docker logs "${WORKER_NAME}" --tail 50 2>/dev/null || true
-                        exit 1
-                    fi
-
-                    echo "==> All containers are running successfully"
-                '''
-            }
-        }
+          echo "All containers are running successfully"
+        '''
+      }
     }
+  }
 
-    post {
-        always {
-            sh '''
-                mkdir -p deploy-logs
-                docker compose -f "${COMPOSE_FILE}" ps > deploy-logs/compose-ps.txt 2>/dev/null || true
-                docker logs "${CONTAINER_NAME}" --since=30m > "deploy-logs/${CONTAINER_NAME}.log" 2>&1 || true
-                docker logs "${WORKER_NAME}" --since=30m > "deploy-logs/${WORKER_NAME}.log" 2>&1 || true
-                docker ps -a > deploy-logs/all-containers.txt 2>/dev/null || true
-                docker network ls > deploy-logs/networks.txt 2>/dev/null || true
-            '''
-            archiveArtifacts artifacts: 'deploy-logs/**', allowEmptyArchive: true
-        }
-        success {
-            echo '✅ Deployment completed successfully!'
-        }
-        failure {
-            sh '''
-                echo "❌ Build failed! Container logs:"
-                docker logs "${CONTAINER_NAME}" --tail 100 2>/dev/null || true
-                docker logs "${WORKER_NAME}" --tail 100 2>/dev/null || true
-            '''
-        }
-        cleanup {
-            // Remove the .env file to avoid credential leakage
-            sh 'rm -f "${WORKSPACE}/.env"'
-        }
+  post {
+    always {
+      sh '''
+        mkdir -p deploy-logs
+
+        # Collect logs for debugging
+        docker compose -f "${COMPOSE_FILE}" ps > deploy-logs/compose-ps.txt 2>/dev/null || true
+        docker logs "${CONTAINER_NAME}" --since=30m > "deploy-logs/${CONTAINER_NAME}.log" 2>/dev/null || true
+        docker logs "${WORKER_NAME}" --since=30m > "deploy-logs/${WORKER_NAME}.log" 2>/dev/null || true
+        docker ps -a > deploy-logs/all-containers.txt 2>/dev/null || true
+        docker network ls > deploy-logs/networks.txt 2>/dev/null || true
+      '''
+      archiveArtifacts artifacts: 'deploy-logs/**', onlyIfSuccessful: false
     }
+    failure {
+      sh '''
+        echo "Build failed, cleaning up..."
+        docker compose -f "${COMPOSE_FILE}" down --remove-orphans || true
+      '''
+    }
+    aborted {
+      sh '''
+        echo "Build aborted, cleaning up..."
+        docker compose -f "${COMPOSE_FILE}" down --remove-orphans || true
+      '''
+    }
+  }
 }
