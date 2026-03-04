@@ -8,7 +8,7 @@ export async function GET(
 ) {
   try {
     const { id } = await params
-    
+
     const generation = await prisma.generation.findUnique({
       where: { id },
       include: {

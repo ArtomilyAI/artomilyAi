@@ -230,6 +230,21 @@ export default function DashboardPage() {
     }
   }
 
+  const handleShare = async () => {
+    if (result.generationId) {
+      // Set generation as public so share page can display it
+      try {
+        await fetch(`/api/generations/${result.generationId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ isPublic: true }),
+        })
+      } catch (err) {
+        console.error('Failed to set generation as public:', err)
+      }
+    }
+  }
+
   const handleModalComplete = () => {
     setIsModalComplete(false) // Reset completion state
   }
@@ -250,8 +265,8 @@ export default function DashboardPage() {
       <div className="inline-flex p-1 bg-slate-200/50 dark:bg-slate-800/50 rounded-xl w-full sm:w-auto overflow-x-auto">
         <button
           className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-6 py-2.5 rounded-lg text-xs sm:text-sm font-semibold transition-all whitespace-nowrap flex-1 sm:flex-none justify-center ${mode === 'IMAGE'
-              ? 'bg-white dark:bg-slate-700 shadow-sm text-slate-900 dark:text-white'
-              : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'
+            ? 'bg-white dark:bg-slate-700 shadow-sm text-slate-900 dark:text-white'
+            : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'
             }`}
           onClick={() => setMode('IMAGE')}
         >
@@ -260,8 +275,8 @@ export default function DashboardPage() {
         </button>
         <button
           className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-6 py-2.5 rounded-lg text-xs sm:text-sm font-semibold transition-all whitespace-nowrap flex-1 sm:flex-none justify-center ${mode === 'VIDEO'
-              ? 'bg-white dark:bg-slate-700 shadow-sm text-slate-900 dark:text-white'
-              : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'
+            ? 'bg-white dark:bg-slate-700 shadow-sm text-slate-900 dark:text-white'
+            : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'
             }`}
           onClick={() => setMode('VIDEO')}
         >
@@ -270,8 +285,8 @@ export default function DashboardPage() {
         </button>
         <button
           className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-6 py-2.5 rounded-lg text-xs sm:text-sm font-semibold transition-all whitespace-nowrap flex-1 sm:flex-none justify-center ${mode === 'TEXT'
-              ? 'bg-white dark:bg-slate-700 shadow-sm text-slate-900 dark:text-white'
-              : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'
+            ? 'bg-white dark:bg-slate-700 shadow-sm text-slate-900 dark:text-white'
+            : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'
             }`}
           onClick={() => setMode('TEXT')}
         >
@@ -342,6 +357,7 @@ export default function DashboardPage() {
             hashtags={result.hashtags}
             generationId={result.generationId}
             onDownload={handleDownload}
+            onShare={handleShare}
             isLoading={isGenerating}
             loadingMode={generationMode}
           />

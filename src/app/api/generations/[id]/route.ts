@@ -37,7 +37,20 @@ export async function PATCH(
     }
 
     const { id } = await params
-    const generation = await GenerationService.togglePublic(id, session.user.id)
+
+    // Check if body has explicit isPublic value
+    let generation
+    try {
+      const body = await request.json()
+      if (typeof body.isPublic === 'boolean') {
+        generation = await GenerationService.setPublic(id, session.user.id, body.isPublic)
+      } else {
+        generation = await GenerationService.togglePublic(id, session.user.id)
+      }
+    } catch {
+      // No body or invalid JSON — use toggle
+      generation = await GenerationService.togglePublic(id, session.user.id)
+    }
 
     return NextResponse.json(generation)
   } catch (error) {

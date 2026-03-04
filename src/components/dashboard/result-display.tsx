@@ -24,6 +24,7 @@ interface ResultDisplayProps {
   hashtags?: string[]
   generationId?: string
   onDownload?: () => void
+  onShare?: () => Promise<void>
   onCopyCaption?: () => void
   onCopyHashtags?: () => void
   isLoading?: boolean
@@ -37,6 +38,7 @@ export function ResultDisplay({
   hashtags = [],
   generationId,
   onDownload,
+  onShare,
   onCopyCaption,
   onCopyHashtags,
   isLoading = false,
@@ -65,6 +67,10 @@ export function ResultDisplay({
 
   const handleShare = async () => {
     if (generationId) {
+      // Set public via parent callback first
+      if (onShare) {
+        await onShare()
+      }
       const url = `${window.location.origin}/share/${generationId}`
       setShareUrl(url)
       await navigator.clipboard.writeText(url)
@@ -171,7 +177,7 @@ export function ResultDisplay({
                       variant="secondary"
                       size="sm"
                       onClick={() => setPreviewOpen(true)}
-                      className="bg-white text-slate-900 font-bold"
+                      className="bg-white/20 backdrop-blur-md text-white hover:bg-white/30"
                     >
                       <Eye className="size-4 mr-1" />
                       Preview
@@ -180,7 +186,7 @@ export function ResultDisplay({
                       variant="secondary"
                       size="sm"
                       onClick={onDownload}
-                      className="bg-white text-slate-900 font-bold"
+                      className="bg-white/20 backdrop-blur-md text-white hover:bg-white/30"
                     >
                       <Download className="size-4 mr-1" />
                       Download

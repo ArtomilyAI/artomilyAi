@@ -14,7 +14,6 @@ import {
   Sparkles,
   Upload,
   X,
-  Clock,
   Zap,
   Type,
   FileEdit,

@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import Link from 'next/link'
+import Image from 'next/image'
 import { Zap } from 'lucide-react'
 
 export function HeroSection() {
@@ -168,23 +169,13 @@ export function HeroSection() {
         <div className="hero-image flex-1 w-full relative">
           <div className="hero-gradient absolute -top-10 -right-10 w-2/3 h-2/3 bg-gradient-to-br from-primary/30 to-emerald-400/30 rounded-full blur-3xl opacity-50 pointer-events-none" />
           <div className="relative w-full aspect-[4/3] rounded-2xl overflow-hidden shadow-2xl border border-slate-100 dark:border-slate-700 bg-slate-100 dark:bg-slate-800">
-            <div className="w-full h-full bg-gradient-to-br from-slate-200 to-slate-300 dark:from-slate-700 dark:to-slate-800 flex items-center justify-center">
-              <div className="text-center p-8">
-                <div className="size-16 mx-auto mb-4 rounded-full bg-primary/20 flex items-center justify-center">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill="currentColor"
-                    className="size-8 text-primary"
-                  >
-                    <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z" />
-                  </svg>
-                </div>
-                <p className="text-slate-500 dark:text-slate-400 text-sm">
-                  Dashboard Preview
-                </p>
-              </div>
-            </div>
+            <Image
+              src="/dashboard2.png"
+              alt="BuatinAi Dashboard Preview"
+              fill
+              className="object-cover object-top"
+              priority
+            />
 
             <div className="absolute bottom-6 left-6 right-6 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm p-4 rounded-xl shadow-lg border border-slate-100 dark:border-slate-800 flex items-start gap-4">
               <div className="size-10 rounded-full bg-green-100 text-green-600 flex items-center justify-center shrink-0">
@@ -202,8 +193,7 @@ export function HeroSection() {
                   Content Generated
                 </h4>
                 <p className="text-xs text-slate-500 mt-1">
-                  "Ramadan Kareem" social post successfully localized for
-                  Jakarta audience.
+                  A humorous meme image based on the prompt "When you ask AI to create a meme but it takes it too literally"
                 </p>
               </div>
             </div>
