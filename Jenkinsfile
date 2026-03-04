@@ -18,38 +18,51 @@ pipeline {
           mkdir -p deploy-logs
           docker compose version
           ls -la "${COMPOSE_FILE}"
-
-          # Create external network if not exists (required for traefik_proxy)
-          if ! docker network ls | grep -q "traefik_proxy"; then
-            echo "Creating external network: traefik_proxy"
-            docker network create traefik_proxy
-          else
-            echo "External network traefik_proxy already exists"
-          fi
         '''
       }
     }
 
     stage('Build & Deploy') {
       steps {
-        withCredentials([
-          string(credentialsId: 'DATABASE_URL',                       variable: 'DATABASE_URL'),
-          string(credentialsId: 'NEXTAUTH_URL',                      variable: 'NEXTAUTH_URL'),
-          string(credentialsId: 'NEXTAUTH_SECRET',                   variable: 'NEXTAUTH_SECRET'),
-          string(credentialsId: 'REDIS_URL',                         variable: 'REDIS_URL'),
-          string(credentialsId: 'ALIBABA_API_KEY',                   variable: 'ALIBABA_API_KEY'),
-          string(credentialsId: 'STRIPE_SECRET_KEY',                 variable: 'STRIPE_SECRET_KEY'),
-          string(credentialsId: 'STRIPE_WEBHOOK_SECRET',             variable: 'STRIPE_WEBHOOK_SECRET'),
-          string(credentialsId: 'NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY', variable: 'NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY')
-        ]) {
+        script {
+          // Build env file from credentials
+          // Each credential is wrapped individually so missing ones don't block deployment
+          def envLines = []
+
+          def credentialIds = [
+            'DATABASE_URL',
+            'NEXTAUTH_URL',
+            'NEXTAUTH_SECRET',
+            'REDIS_URL',
+            'ALIBABA_API_KEY',
+            'STRIPE_SECRET_KEY',
+            'STRIPE_WEBHOOK_SECRET',
+            'NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY'
+          ]
+
+          for (credId in credentialIds) {
+            try {
+              withCredentials([string(credentialsId: credId, variable: 'CRED_VALUE')]) {
+                envLines.add("${credId}=${env.CRED_VALUE}")
+              }
+            } catch (Exception e) {
+              echo "WARNING: Credential '${credId}' not found in Jenkins, skipping."
+              envLines.add("${credId}=")
+            }
+          }
+
+          // Write .env file
+          writeFile file: "${env.WORKSPACE}/.env", text: envLines.join('\n') + '\n'
+          echo ".env file created with ${envLines.size()} variables"
+
+          // Now run docker compose (it will read .env automatically)
           sh '''
             set -e
 
-            # Aggressive container cleanup to prevent name conflicts
+            # Cleanup existing containers
             echo "Cleaning up existing containers..."
             docker compose -f "${COMPOSE_FILE}" down --remove-orphans || true
 
-            # Force stop and remove specific containers if they still exist
             for CN in "${CONTAINER_NAME}" "${WORKER_NAME}"; do
               if docker ps -a --format "{{.Names}}" | grep -q "^${CN}$"; then
                 echo "Force stopping and removing container: ${CN}"
@@ -62,8 +75,7 @@ pipeline {
             echo "Building Docker image..."
             docker compose -f "${COMPOSE_FILE}" build --pull --no-cache
 
-            # Start the containers — env vars from withCredentials are
-            # automatically available to docker compose via shell environment
+            # Start the containers
             echo "Starting containers..."
             docker compose -f "${COMPOSE_FILE}" up -d
 
@@ -80,20 +92,18 @@ pipeline {
         sh '''
           set -e
 
-          echo "Getting container IDs..."
+          echo "Checking containers..."
           CID_APP=$(docker ps -q --filter "name=${CONTAINER_NAME}")
           CID_WORKER=$(docker ps -q --filter "name=${WORKER_NAME}")
 
           if [ -z "$CID_APP" ]; then
-            echo "App container not found. Current containers:"
-            docker compose -f "${COMPOSE_FILE}" ps
+            echo "App container not found!"
             docker ps -a
             exit 1
           fi
 
           if [ -z "$CID_WORKER" ]; then
-            echo "Worker container not found. Current containers:"
-            docker compose -f "${COMPOSE_FILE}" ps
+            echo "Worker container not found!"
             docker ps -a
             exit 1
           fi
@@ -101,9 +111,8 @@ pipeline {
           echo "Found App container:    $CID_APP"
           echo "Found Worker container: $CID_WORKER"
 
-          # Wait and verify both containers remain running
           i=0
-          while [ $i -lt 12 ]; do
+          while [ $i -lt 6 ]; do
             STATE_APP=$(docker inspect --format='{{.State.Status}}' "$CID_APP" || echo "unknown")
             STATE_WORKER=$(docker inspect --format='{{.State.Status}}' "$CID_WORKER" || echo "unknown")
             echo "Attempt $((i+1)): app=${STATE_APP}, worker=${STATE_WORKER}"
@@ -133,6 +142,7 @@ pipeline {
   post {
     always {
       sh '''
+        set -e
         mkdir -p deploy-logs
 
         # Collect logs for debugging
@@ -142,6 +152,10 @@ pipeline {
         docker ps -a > deploy-logs/all-containers.txt 2>/dev/null || true
         docker network ls > deploy-logs/networks.txt 2>/dev/null || true
       '''
+
+      // Remove .env to prevent credential leakage
+      sh 'rm -f "${WORKSPACE}/.env"'
+
       archiveArtifacts artifacts: 'deploy-logs/**', onlyIfSuccessful: false
     }
     failure {
