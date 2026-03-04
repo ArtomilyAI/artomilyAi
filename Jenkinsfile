@@ -24,38 +24,16 @@ pipeline {
 
     stage('Build & Deploy') {
       steps {
-        script {
-          // Build env file from credentials
-          // Each credential is wrapped individually so missing ones don't block deployment
-          def envLines = []
-
-          def credentialIds = [
-            'DATABASE_URL',
-            'NEXTAUTH_URL',
-            'NEXTAUTH_SECRET',
-            'REDIS_URL',
-            'ALIBABA_API_KEY',
-            'STRIPE_SECRET_KEY',
-            'STRIPE_WEBHOOK_SECRET',
-            'NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY'
-          ]
-
-          for (credId in credentialIds) {
-            try {
-              withCredentials([string(credentialsId: credId, variable: 'CRED_VALUE')]) {
-                envLines.add("${credId}=${env.CRED_VALUE}")
-              }
-            } catch (Exception e) {
-              echo "WARNING: Credential '${credId}' not found in Jenkins, skipping."
-              envLines.add("${credId}=")
-            }
-          }
-
-          // Write .env file
-          writeFile file: "${env.WORKSPACE}/.env", text: envLines.join('\n') + '\n'
-          echo ".env file created with ${envLines.size()} variables"
-
-          // Now run docker compose (it will read .env automatically)
+        withCredentials([
+          string(credentialsId: 'DATABASE_URL',                       variable: 'DATABASE_URL'),
+          string(credentialsId: 'NEXTAUTH_URL',                      variable: 'NEXTAUTH_URL'),
+          string(credentialsId: 'NEXTAUTH_SECRET',                   variable: 'NEXTAUTH_SECRET'),
+          string(credentialsId: 'REDIS_URL',                         variable: 'REDIS_URL'),
+          string(credentialsId: 'ALIBABA_API_KEY',                   variable: 'ALIBABA_API_KEY'),
+          string(credentialsId: 'STRIPE_SECRET_KEY',                 variable: 'STRIPE_SECRET_KEY'),
+          string(credentialsId: 'STRIPE_WEBHOOK_SECRET',             variable: 'STRIPE_WEBHOOK_SECRET'),
+          string(credentialsId: 'NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY', variable: 'NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY')
+        ]) {
           sh '''
             set -e
 
@@ -70,6 +48,19 @@ pipeline {
                 docker rm "${CN}" || true
               fi
             done
+
+            # Write .env file for docker-compose
+            echo "Writing .env file..."
+            cat > "${WORKSPACE}/.env" <<ENVFILE
+DATABASE_URL=${DATABASE_URL}
+NEXTAUTH_URL=${NEXTAUTH_URL}
+NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
+REDIS_URL=${REDIS_URL}
+ALIBABA_API_KEY=${ALIBABA_API_KEY}
+STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
+STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET}
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=${NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY}
+ENVFILE
 
             # Build the new image
             echo "Building Docker image..."
