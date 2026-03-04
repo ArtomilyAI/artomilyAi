@@ -8,6 +8,9 @@ services:
       target: runner
     container_name: artomily-app
     restart: unless-stopped
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
     environment:
       NODE_ENV: production
       DATABASE_URL: ${DATABASE_URL}
@@ -45,6 +48,9 @@ services:
       target: worker
     container_name: artomily-worker
     restart: unless-stopped
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
     environment:
       NODE_ENV: production
       DATABASE_URL: ${DATABASE_URL}
