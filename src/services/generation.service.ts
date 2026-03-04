@@ -301,4 +301,44 @@ export class GenerationService {
       where: { id: generationId },
     })
   }
+
+  /**
+   * Get all public generations (for discovery feed)
+   */
+  static async getPublicGenerations(options?: {
+    limit?: number
+    offset?: number
+    type?: GenerationType
+  }) {
+    const where = {
+      isPublic: true,
+      status: GenerationStatus.COMPLETED,
+      resultUrl: { not: null },
+      ...(options?.type && { type: options.type }),
+    }
+
+    const generations = await prisma.generation.findMany({
+      where,
+      orderBy: { createdAt: 'desc' },
+      take: options?.limit ?? 20,
+      skip: options?.offset ?? 0,
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            image: true,
+          },
+        },
+      },
+    })
+
+    const total = await prisma.generation.count({ where })
+
+    return {
+      generations,
+      total,
+      hasMore: (options?.offset ?? 0) + generations.length < total,
+    }
+  }
 }

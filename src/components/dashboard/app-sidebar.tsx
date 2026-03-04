@@ -7,6 +7,7 @@ import {
   LayoutDashboard,
   History,
   LayoutTemplate,
+  Compass,
   Sparkles,
 } from "lucide-react"
 
@@ -31,6 +32,11 @@ const navItems = [
     title: "Dashboard",
     href: "/dashboard",
     icon: LayoutDashboard,
+  },
+  {
+    title: "Discovery",
+    href: "/dashboard/discovery",
+    icon: Compass,
   },
   {
     title: "History",

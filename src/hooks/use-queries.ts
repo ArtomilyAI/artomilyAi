@@ -30,15 +30,26 @@ export interface UserWallet {
   balance: number
 }
 
+// Discovery generation extends Generation with user info
+export interface DiscoveryGeneration extends Generation {
+  user: {
+    id: string
+    name: string | null
+    image: string | null
+  }
+}
+
 // Query Keys - centralized for easy invalidation
 export const queryKeys = {
-  templates: (filters?: { category?: string; type?: string; search?: string; limit?: number }) => 
+  templates: (filters?: { category?: string; type?: string; search?: string; limit?: number }) =>
     ['templates', filters] as const,
   template: (id: string) => ['template', id] as const,
   generations: (filters?: { type?: string; limit?: number }) => ['generations', filters] as const,
   generation: (id: string) => ['generation', id] as const,
   generationStatus: (id: string) => ['generation', id, 'status'] as const,
   userWallet: () => ['user', 'wallet'] as const,
+  discovery: (filters?: { type?: string; limit?: number; offset?: number }) =>
+    ['discovery', filters] as const,
 }
 
 // Templates Hook
@@ -51,7 +62,7 @@ export function useTemplates(filters?: { category?: string; type?: string; searc
       if (filters?.type) params.set('type', filters.type)
       if (filters?.search) params.set('search', filters.search)
       if (filters?.limit) params.set('limit', filters.limit.toString())
-      
+
       const res = await fetch(`/api/templates?${params}`)
       if (!res.ok) throw new Error('Failed to fetch templates')
       return res.json()
@@ -82,7 +93,7 @@ export function useGenerations(filters?: { type?: string; limit?: number }) {
       const params = new URLSearchParams()
       params.set('limit', limit.toString())
       if (filters?.type && filters.type !== 'all') params.set('type', filters.type)
-      
+
       const res = await fetch(`/api/generations?${params}`)
       if (!res.ok) throw new Error('Failed to fetch generations')
       return res.json()
@@ -108,7 +119,7 @@ export function useUserWallet() {
 // Generate Mutation Hook
 export function useGenerate() {
   const queryClient = useQueryClient()
-  
+
   return useMutation({
     mutationFn: async (data: {
       type: 'TEXT' | 'IMAGE' | 'VIDEO'
@@ -166,7 +177,7 @@ export function useGenerationStatus(id: string | null, options?: { enabled?: boo
 // Delete Generation Mutation Hook
 export function useDeleteGeneration() {
   const queryClient = useQueryClient()
-  
+
   return useMutation({
     mutationFn: async (id: string) => {
       const res = await fetch(`/api/generations/${id}`, {
@@ -184,7 +195,7 @@ export function useDeleteGeneration() {
 // Toggle Generation Public Mutation Hook
 export function useToggleGenerationPublic() {
   const queryClient = useQueryClient()
-  
+
   return useMutation({
     mutationFn: async (id: string) => {
       const res = await fetch(`/api/generations/${id}`, {
@@ -202,7 +213,7 @@ export function useToggleGenerationPublic() {
 // Use Template Mutation Hook
 export function useTemplateUsage() {
   const queryClient = useQueryClient()
-  
+
   return useMutation({
     mutationFn: async (id: string) => {
       const res = await fetch(`/api/templates/${id}/use`, {
@@ -220,7 +231,7 @@ export function useTemplateUsage() {
 // Prefetch Functions (for better UX)
 export function usePrefetchTemplate() {
   const queryClient = useQueryClient()
-  
+
   return (id: string) => {
     queryClient.prefetchQuery({
       queryKey: queryKeys.template(id),
@@ -231,4 +242,28 @@ export function usePrefetchTemplate() {
       },
     })
   }
+}
+
+// Discovery Hook - fetches public generations from all users
+export function useDiscovery(filters?: { type?: string; limit?: number; offset?: number }) {
+  const limit = filters?.limit ?? 20
+  const offset = filters?.offset ?? 0
+  return useQuery({
+    queryKey: queryKeys.discovery(filters),
+    queryFn: async () => {
+      const params = new URLSearchParams()
+      params.set('limit', limit.toString())
+      params.set('offset', offset.toString())
+      if (filters?.type && filters.type !== 'all') params.set('type', filters.type)
+
+      const res = await fetch(`/api/discovery?${params}`)
+      if (!res.ok) throw new Error('Failed to fetch discovery content')
+      return res.json() as Promise<{
+        generations: DiscoveryGeneration[]
+        total: number
+        hasMore: boolean
+      }>
+    },
+    staleTime: 30 * 1000, // 30 seconds
+  })
 }
