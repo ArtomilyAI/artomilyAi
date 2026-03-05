@@ -1,4 +1,4 @@
-import { Plan, SubscriptionStatus } from '@prisma/client'
+import { Plan, Role, SubscriptionStatus } from '@prisma/client'
 import { DefaultSession } from 'next-auth'
 
 declare module 'next-auth' {
@@ -6,6 +6,7 @@ declare module 'next-auth' {
     user: {
       id: string
       plan: Plan
+      role: Role
       walletBalance: number
       username?: string | null
     } & DefaultSession['user']
@@ -13,6 +14,7 @@ declare module 'next-auth' {
 
   interface User {
     plan: Plan
+    role: Role
     walletBalance: number
     username?: string | null
   }
@@ -22,6 +24,7 @@ declare module '@auth/core/jwt' {
   interface JWT {
     id: string
     plan: Plan
+    role: Role
     walletBalance: number
     username?: string | null
   }

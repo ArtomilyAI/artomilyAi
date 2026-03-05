@@ -9,6 +9,12 @@ datasource db {
   provider = "postgresql"
 }
 
+// User role
+enum Role {
+  USER
+  ADMIN
+}
+
 // Subscription plans
 enum Plan {
   FREE
@@ -58,6 +64,7 @@ model User {
   emailVerified       DateTime?
   image               String?
   name                String?
+  role                Role             @default(USER)
   plan                Plan             @default(FREE)
   walletBalance       Int              @default(0) // Credits
   subscriptionStatus  SubscriptionStatus?

@@ -10,6 +10,7 @@ export interface Template {
   category: string
   tags: string[]
   thumbnail: string | null
+  isPublic: boolean
   usageCount: number
   createdAt: string
   updatedAt: string
@@ -265,5 +266,88 @@ export function useDiscovery(filters?: { type?: string; limit?: number; offset?:
       }>
     },
     staleTime: 30 * 1000, // 30 seconds
+  })
+}
+
+// Admin - Create Template mutation
+export interface CreateTemplateInput {
+  name: string
+  description?: string
+  prompt: string
+  type: 'TEXT' | 'IMAGE' | 'VIDEO' | 'UPSCALE'
+  category:
+  | 'RAMADHAN'
+  | 'CHINESE_NEW_YEAR'
+  | 'NATIONAL_DAY'
+  | 'TRENDING_MEME'
+  | 'VIRAL_TEMPLATE'
+  | 'BUSINESS'
+  | 'SOCIAL_MEDIA'
+  | 'MARKETING'
+  tags?: string[]
+  thumbnail?: string
+  isPublic?: boolean
+}
+
+export function useCreateTemplate() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (input: CreateTemplateInput) => {
+      const res = await fetch('/api/templates', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(input),
+      })
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        throw new Error(err.error || 'Failed to create template')
+      }
+      return res.json() as Promise<Template>
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['templates'] })
+    },
+  })
+}
+
+// Admin - Update Template mutation
+export type UpdateTemplateInput = Partial<CreateTemplateInput>
+
+export function useUpdateTemplate() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ id, ...input }: UpdateTemplateInput & { id: string }) => {
+      const res = await fetch(`/api/templates/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(input),
+      })
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        throw new Error(err.error || 'Failed to update template')
+      }
+      return res.json() as Promise<Template>
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['templates'] })
+    },
+  })
+}
+
+// Admin - Delete Template mutation
+export function useDeleteTemplate() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const res = await fetch(`/api/templates/${id}`, { method: 'DELETE' })
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        throw new Error(err.error || 'Failed to delete template')
+      }
+      return res.json()
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['templates'] })
+    },
   })
 }

@@ -27,9 +27,13 @@ export class TemplateService {
     filter?: TemplateFilter
     limit?: number
     offset?: number
+    includePrivate?: boolean
   }) {
-    const where: any = {
-      isPublic: true,
+    const where: any = {}
+
+    // Non-admin users only see public templates
+    if (!options?.includePrivate) {
+      where.isPublic = true
     }
 
     if (options?.filter?.category) {

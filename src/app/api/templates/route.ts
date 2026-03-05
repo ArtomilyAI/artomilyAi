@@ -2,9 +2,13 @@ import { NextRequest, NextResponse } from 'next/server'
 import { TemplateService } from '@/services/template.service'
 import { GenerationType, TemplateCategory } from '@prisma/client'
 import { z } from 'zod'
+import { auth } from '@/lib/auth'
 
 export async function GET(request: NextRequest) {
   try {
+    const session = await auth()
+    const isAdmin = session?.user?.role === 'ADMIN'
+
     const { searchParams } = new URL(request.url)
     const limit = parseInt(searchParams.get('limit') || '20')
     const offset = parseInt(searchParams.get('offset') || '0')
@@ -22,6 +26,8 @@ export async function GET(request: NextRequest) {
       },
       limit,
       offset,
+      // Admin sees all templates including private ones
+      includePrivate: isAdmin,
     })
 
     return NextResponse.json(result)
@@ -53,6 +59,15 @@ const createTemplateSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
+    // Only ADMIN users can create templates
+    const session = await auth()
+    if (!session?.user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+    if (session.user.role !== 'ADMIN') {
+      return NextResponse.json({ error: 'Forbidden: admin only' }, { status: 403 })
+    }
+
     const body = await request.json()
     const result = createTemplateSchema.safeParse(body)
 
