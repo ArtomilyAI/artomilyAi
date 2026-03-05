@@ -32,10 +32,10 @@ export async function POST(request: NextRequest) {
 
     const { prompt, type } = result.data
 
-    // Create contextual prompt for caption
+    // Create contextual prompt for caption in Indonesian
     const contextualPrompt = type === 'IMAGE'
-      ? `Write an engaging social media caption for this image. The image was generated based on this prompt: "${prompt}". Include relevant hashtags at the end.`
-      : `Write an engaging social media caption for this video. The video was generated based on this prompt: "${prompt}". Include relevant hashtags at the end.`
+      ? `Tuliskan caption media sosial yang menarik dalam Bahasa Indonesia untuk gambar ini. Gambar dibuat berdasarkan prompt: "${prompt}". Sertakan hashtag yang relevan di bagian akhir caption.`
+      : `Tuliskan caption media sosial yang menarik dalam Bahasa Indonesia untuk video ini. Video dibuat berdasarkan prompt: "${prompt}". Sertakan hashtag yang relevan di bagian akhir caption.`
 
     // Generate caption synchronously (TEXT is fast)
     const aiResult = await AIService.generateText({

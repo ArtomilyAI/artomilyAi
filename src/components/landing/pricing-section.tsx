@@ -14,39 +14,39 @@ gsap.registerPlugin(ScrollTrigger)
 const plans = [
   {
     name: 'Starter',
-    price: '$0',
-    period: '/month',
-    description: 'Perfect for individuals just getting started with AI content.',
-    badge: 'Get 50 Credits On Signup',
+    price: 'Gratis',
+    period: '',
+    description: 'Daftar gratis, langsung dapat 50 kredit. Coba semua fiturnya tanpa keluarin uang sepeser pun. Tidak ada kartu kredit, tidak ada jebakan.',  
+    badge: '50 Kredit Gratis Saat Daftar',
     features: [
-      '50 credits on sign-up (one-time)',
-      '1 credit → 1 AI Text / Caption',
-      '5 credits → 1 AI Image',
-      '3 credits → 1 Image Upscale',
-      'Access to all public templates',
+      '50 kredit gratis saat pertama daftar',
+      '1 kredit → 1 Teks AI / Caption',
+      '5 kredit → 1 Gambar AI',
+      '3 kredit → 1 Upscale Gambar',
+      'Akses semua template publik',
     ],
-    buttonText: 'Get Started Free',
+    buttonText: 'Mulai Gratis Sekarang',
     buttonVariant: 'outline' as const,
     buttonHref: '/auth/register',
     popular: false,
   },
   {
     name: 'Pro Creator',
-    price: '$29',
-    period: '/month',
-    description: 'For professionals who need unlimited creative power.',
+    price: 'Rp 299.000',
+    period: '/bulan',
+    description: 'Buat konten setiap hari tanpa kehabisan ide dan kredit. Untuk kreator aktif dan UMKM yang serius membangun brand mereka.',  
     badge: null,
     features: [
-      '300 credits per month',
-      '1 credit → 1 AI Text / Caption',
-      '5 credits → 1 AI Image',
-      '20 credits → 1 AI Video',
-      '3 credits → 1 Image Upscale',
-      'All Premium & Seasonal Templates',
-      'Brand Voice Customization',
-      '4K Image Exports',
+      '300 kredit per bulan',
+      '1 kredit → 1 Teks AI / Caption',
+      '5 kredit → 1 Gambar AI',
+      '20 kredit → 1 Video AI',
+      '3 kredit → 1 Upscale Gambar',
+      'Semua Template Premium & Musiman',
+      'Kustomisasi Brand Voice',
+      'Ekspor Gambar 4K',
     ],
-    buttonText: 'Upgrade to Pro',
+    buttonText: 'Upgrade ke Pro',
     buttonVariant: 'default' as const,
     buttonHref: '/auth/register?plan=pro',
     popular: true,
@@ -100,10 +100,10 @@ export function PricingSection() {
       <div className="mx-auto max-w-7xl px-4">
         <div className="pricing-header text-center mb-16">
           <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-4">
-            Simple, Transparent Pricing
+            Harga Jelas, Tanpa Biaya Tersembunyi
           </h2>
           <p className="text-slate-600 dark:text-slate-400 max-w-lg mx-auto">
-            Choose the plan that fits your creative needs. Cancel anytime.
+            Mulai dari gratis, upgrade kapan kamu mau. Tidak ada kontrak, tidak ada biaya kejutan. Bayar hanya sesuai kebutuhan.
           </p>
         </div>
 
@@ -129,7 +129,7 @@ export function PricingSection() {
                   </h3>
                   {plan.popular && (
                     <Badge className="bg-primary text-white text-xs font-bold">
-                      Most Popular
+                      Paling Populer
                     </Badge>
                   )}
                   {plan.badge && (

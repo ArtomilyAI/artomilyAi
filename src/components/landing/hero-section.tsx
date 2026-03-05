@@ -96,23 +96,26 @@ export function HeroSection() {
       <div className="mx-auto max-w-7xl flex flex-col lg:flex-row gap-12 items-center">
         <div className="flex-1 flex flex-col gap-6 text-center lg:text-left">
           <div className="flex flex-col gap-4">
-            <Badge
-              variant="secondary"
-              className="hero-badge w-fit mx-auto lg:mx-0 gap-2 bg-primary/10 text-primary border-primary/20 hover:bg-primary/15 px-3 py-1"
-            >
-              <Zap className="size-4" />
-              Qwen & Wan Powered
-            </Badge>
+            <div className="hero-badge flex items-center justify-center lg:justify-start">
+              <Badge
+                variant="secondary"
+                className="w-fit gap-2 bg-primary/10 text-primary border-primary/20 hover:bg-primary/15 px-3 py-1"
+              >
+                <Zap className="size-4" />
+                Platform Konten AI untuk UMKM & Kreator Indonesia
+              </Badge>
+            </div>
 
             <h1 className="hero-title text-slate-900 dark:text-white text-4xl md:text-5xl lg:text-6xl font-black leading-[1.1] tracking-tight">
-              Create Cultural Content in{' '}
-              <span className="text-primary">Seconds</span>
+              Konten Siap Pakai,{' '}
+              <span className="text-primary">Selesai dalam Detik</span>
             </h1>
 
-            <p className="hero-description text-slate-600 dark:text-slate-400 text-lg md:text-xl font-normal leading-relaxed max-w-[600px] mx-auto lg:mx-0">
-              Our AI understands local nuances to generate high-quality,
-              culturally relevant marketing copy and visuals instantly. Stop
-              guessing, start connecting.
+            <p className="hero-description text-slate-600 dark:text-slate-400 text-lg md:text-xl font-normal leading-relaxed max-w-150 mx-auto lg:mx-0">
+              Tidak perlu bingung mulai dari mana. Pilih template, masukkan detail produk atau brandmu,
+              dan AI langsung hasilkan teks, gambar, atau video yang siap diposting.
+              Berbahasa Indonesia, kontekstual, dan tidak butuh keahlian desain atau copywriting.
+              Hemat waktu hingga 90%. Langsung jalan.
             </p>
           </div>
 
@@ -122,7 +125,7 @@ export function HeroSection() {
                 size="lg"
                 className="hero-button h-12 px-6 text-base shadow-lg shadow-primary/20 transition-all hover:scale-105 bg-primary hover:bg-primary/90"
               >
-                Start Creating for Free
+                Mulai Buat Konten Gratis
               </Button>
             </Link>
             <Link href="#templates">
@@ -139,7 +142,7 @@ export function HeroSection() {
                 >
                   <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z" />
                 </svg>
-                View Templates
+                Lihat Template
               </Button>
             </Link>
           </div>
@@ -162,13 +165,13 @@ export function HeroSection() {
                 </AvatarFallback>
               </Avatar>
             </div>
-            <p>Trusted by 10,000+ creators</p>
+            <p>Dipercaya 10.000+ UMKM & kreator Indonesia</p>
           </div>
         </div>
 
         <div className="hero-image flex-1 w-full relative">
-          <div className="hero-gradient absolute -top-10 -right-10 w-2/3 h-2/3 bg-gradient-to-br from-primary/30 to-emerald-400/30 rounded-full blur-3xl opacity-50 pointer-events-none" />
-          <div className="relative w-full aspect-[4/3] rounded-2xl overflow-hidden shadow-2xl border border-slate-100 dark:border-slate-700 bg-slate-100 dark:bg-slate-800">
+          <div className="hero-gradient absolute -top-10 -right-10 w-2/3 h-2/3 bg-linear-to-br from-primary/30 to-emerald-400/30 rounded-full blur-3xl opacity-50 pointer-events-none" />
+          <div className="relative w-full aspect-4/3 rounded-2xl overflow-hidden shadow-2xl border border-slate-100 dark:border-slate-700 bg-slate-100 dark:bg-slate-800">
             <Image
               src="/dashboard2.png"
               alt="BuatinAi Dashboard Preview"
@@ -190,13 +193,22 @@ export function HeroSection() {
               </div>
               <div>
                 <h4 className="text-sm font-bold text-slate-900 dark:text-white">
-                  Content Generated
+                  Konten Selesai dalam 30 Detik!
                 </h4>
                 <p className="text-xs text-slate-500 mt-1">
-                  A humorous meme image based on the prompt "When you ask AI to create a meme but it takes it too literally"
+                  Gambar produk + caption AI langsung jadi, siap diposting ke Instagram & TikTok.
                 </p>
               </div>
             </div>
+          </div>
+          <div className="mt-4 flex items-center justify-center gap-2">
+            <Badge
+              variant="secondary"
+              className="w-fit gap-1.5 bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700 px-3 py-1 font-medium text-xs"
+            >
+              <span className="size-1.5 rounded-full bg-green-500 inline-block" />
+              Powered by Qwen &amp; Wan AI
+            </Badge>
           </div>
         </div>
       </div>

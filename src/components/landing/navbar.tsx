@@ -8,9 +8,9 @@ import Link from 'next/link'
 import Image from 'next/image'
 
 const navLinks = [
-  { href: '#features', label: 'Features' },
-  { href: '#templates', label: 'Templates' },
-  { href: '#pricing', label: 'Pricing' },
+  { href: '#features', label: 'Fitur' },
+  { href: '#templates', label: 'Template' },
+  { href: '#pricing', label: 'Harga' },
 ]
 
 export function Navbar() {
@@ -91,7 +91,7 @@ export function Navbar() {
           </Link>
           <Link href="/auth/register">
             <Button className="nav-button h-9 px-4 shadow-sm bg-primary hover:bg-primary/90">
-              Get Started
+              Mulai Gratis
             </Button>
           </Link>
           <ThemeToggle />

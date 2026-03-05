@@ -12,19 +12,19 @@ gsap.registerPlugin(ScrollTrigger)
 
 const footerLinks = {
   product: [
-    { label: 'Features', href: '#features' },
-    { label: 'Templates', href: '#templates' },
-    { label: 'Pricing', href: '#pricing' },
+    { label: 'Fitur', href: '#features' },
+    { label: 'Template', href: '#templates' },
+    { label: 'Harga', href: '#pricing' },
   ],
   resources: [
     { label: 'Blog', href: '#' },
-    { label: 'Help Center', href: '#' },
-    { label: 'API Docs', href: '#' },
+    { label: 'Pusat Bantuan', href: '#' },
+    { label: 'Dokumentasi API', href: '#' },
   ],
   company: [
-    { label: 'About Us', href: '#' },
-    { label: 'Contact', href: '#' },
-    { label: 'Legal', href: '#' },
+    { label: 'Tentang Kami', href: '#' },
+    { label: 'Kontak', href: '#' },
+    { label: 'Hukum', href: '#' },
   ],
 }
 
@@ -67,8 +67,8 @@ export function Footer() {
               </h2>
             </Link>
             <p className="text-slate-500 dark:text-slate-400 text-sm mb-6 max-w-xs">
-              Empowering creators to tell stories that matter, anywhere in the
-              world.
+              Teman bikin konten untuk UMKM dan kreator Indonesia.
+              Cepat, rapi, dan siap diposting dalam hitungan detik.
             </p>
             <div className="flex gap-4">
               <Link
@@ -115,7 +115,7 @@ export function Footer() {
 
           <div>
             <h4 className="font-bold text-slate-900 dark:text-white mb-4">
-              Product
+              Produk
             </h4>
             <ul className="space-y-2 text-sm text-slate-600 dark:text-slate-400">
               {footerLinks.product.map((link, index) => (
@@ -130,7 +130,7 @@ export function Footer() {
 
           <div>
             <h4 className="font-bold text-slate-900 dark:text-white mb-4">
-              Resources
+              Sumber Daya
             </h4>
             <ul className="space-y-2 text-sm text-slate-600 dark:text-slate-400">
               {footerLinks.resources.map((link, index) => (
@@ -145,7 +145,7 @@ export function Footer() {
 
           <div>
             <h4 className="font-bold text-slate-900 dark:text-white mb-4">
-              Company
+              Perusahaan
             </h4>
             <ul className="space-y-2 text-sm text-slate-600 dark:text-slate-400">
               {footerLinks.company.map((link, index) => (
@@ -163,14 +163,14 @@ export function Footer() {
 
         <div className="flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-slate-500 dark:text-slate-500 text-sm">
-            © 2025 BuatinAi. All rights reserved.
+            © 2025 BuatinAi. Hak cipta dilindungi.
           </p>
           <div className="flex gap-6 text-sm text-slate-500 dark:text-slate-500">
             <Link href="#" className="hover:text-slate-900 dark:hover:text-slate-300">
-              Privacy Policy
+              Kebijakan Privasi
             </Link>
             <Link href="#" className="hover:text-slate-900 dark:hover:text-slate-300">
-              Terms of Service
+              Syarat dan Ketentuan
             </Link>
           </div>
         </div>
