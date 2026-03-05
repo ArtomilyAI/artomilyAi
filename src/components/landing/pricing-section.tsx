@@ -7,6 +7,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import Link from 'next/link'
+import { Gem } from 'lucide-react'
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -16,10 +17,9 @@ const plans = [
     price: '$0',
     period: '/month',
     description: 'Perfect for individuals just getting started with AI content.',
-    badge: '50 credits on signup',
+    badge: 'Get 50 Credits On Signup',
     features: [
       '50 credits on sign-up (one-time)',
-      '20 credits refreshed every month',
       '1 credit → 1 AI Text / Caption',
       '5 credits → 1 AI Image',
       '3 credits → 1 Image Upscale',
@@ -134,7 +134,7 @@ export function PricingSection() {
                   )}
                   {plan.badge && (
                     <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300 text-xs font-semibold border-0">
-                      🎁 {plan.badge}
+                      <Gem></Gem> {plan.badge}
                     </Badge>
                   )}
                 </div>

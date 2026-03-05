@@ -50,7 +50,7 @@ const navItems = [
   },
 ]
 
-const MAX_CREDITS = 20
+const MAX_CREDITS = 50
 
 interface AppSidebarProps {
   balance: number
