@@ -16,10 +16,14 @@ const plans = [
     price: '$0',
     period: '/month',
     description: 'Perfect for individuals just getting started with AI content.',
+    badge: '50 credits on signup',
     features: [
-      '5 AI Generations per day',
-      'Access to standard templates',
-      'Standard resolution images',
+      '50 credits on sign-up (one-time)',
+      '20 credits refreshed every month',
+      '1 credit → 1 AI Text / Caption',
+      '5 credits → 1 AI Image',
+      '3 credits → 1 Image Upscale',
+      'Access to all public templates',
     ],
     buttonText: 'Get Started Free',
     buttonVariant: 'outline' as const,
@@ -31,8 +35,13 @@ const plans = [
     price: '$29',
     period: '/month',
     description: 'For professionals who need unlimited creative power.',
+    badge: null,
     features: [
-      'Unlimited AI Generations',
+      '300 credits per month',
+      '1 credit → 1 AI Text / Caption',
+      '5 credits → 1 AI Image',
+      '20 credits → 1 AI Video',
+      '3 credits → 1 Image Upscale',
       'All Premium & Seasonal Templates',
       'Brand Voice Customization',
       '4K Image Exports',
@@ -121,6 +130,11 @@ export function PricingSection() {
                   {plan.popular && (
                     <Badge className="bg-primary text-white text-xs font-bold">
                       Most Popular
+                    </Badge>
+                  )}
+                  {plan.badge && (
+                    <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300 text-xs font-semibold border-0">
+                      🎁 {plan.badge}
                     </Badge>
                   )}
                 </div>

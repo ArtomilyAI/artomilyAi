@@ -9,6 +9,9 @@ export const CREDIT_COSTS = {
   UPSCALE: 3,
 } as const
 
+// Signup bonus for new users
+export const SIGNUP_BONUS = 50
+
 // Monthly credit allocation per plan
 export const PLAN_CREDITS = {
   FREE: 20,

@@ -1,7 +1,7 @@
 import prisma from "@/lib/db"
 import bcrypt from "bcryptjs"
 import { Plan } from "@prisma/client"
-import { PLAN_CREDITS } from "@/services/credit.service"
+import { PLAN_CREDITS, SIGNUP_BONUS } from "@/services/credit.service"
 import { TransactionType } from "@prisma/client"
 
 export interface RegisterInput {
@@ -63,17 +63,17 @@ export class AuthService {
           username,
           name,
           plan: Plan.FREE,
-          walletBalance: PLAN_CREDITS.FREE,
+          walletBalance: SIGNUP_BONUS,
         },
       })
 
-      // Create initial transaction for free credits
+      // Create initial transaction for signup bonus
       await tx.transaction.create({
         data: {
           userId: newUser.id,
           type: TransactionType.MONTHLY_ALLOCATION,
-          amount: PLAN_CREDITS.FREE,
-          description: "Initial free credits",
+          amount: SIGNUP_BONUS,
+          description: `Welcome bonus — ${SIGNUP_BONUS} free credits`,
         },
       })
 
