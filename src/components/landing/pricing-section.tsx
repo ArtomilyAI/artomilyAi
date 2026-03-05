@@ -112,8 +112,8 @@ export function PricingSection() {
             <Card
               key={index}
               className={`pricing-card relative flex flex-col overflow-hidden ${plan.popular
-                  ? 'bg-slate-900 dark:bg-slate-800 text-white border-transparent'
-                  : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700'
+                ? 'bg-slate-900 dark:bg-slate-800 text-white border-transparent'
+                : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700'
                 }`}
             >
               {plan.popular && (
@@ -166,8 +166,8 @@ export function PricingSection() {
                     <li
                       key={featureIndex}
                       className={`flex items-center gap-3 text-sm ${plan.popular
-                          ? 'text-slate-200'
-                          : 'text-slate-700 dark:text-slate-300'
+                        ? 'text-slate-200'
+                        : 'text-slate-700 dark:text-slate-300'
                         }`}
                     >
                       <svg
@@ -188,8 +188,8 @@ export function PricingSection() {
                   <Button
                     variant={plan.popular ? 'default' : 'outline'}
                     className={`w-full py-3 ${plan.popular
-                        ? 'shadow-lg shadow-primary/25 bg-primary hover:bg-primary/90'
-                        : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700'
+                      ? 'shadow-lg shadow-primary/25 bg-primary hover:bg-primary/90'
+                      : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700'
                       }`}
                   >
                     {plan.buttonText}
