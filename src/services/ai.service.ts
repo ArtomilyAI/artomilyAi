@@ -401,14 +401,14 @@ Respond with only the copywriting content.`,
           'X-DashScope-Async': 'enable',
         },
         body: JSON.stringify({
-          model: 'wan2.1-t2v-turbo',
+          model: 'wan2.1-t2v-plus',
           input: {
             prompt: options.prompt,
           },
           parameters: {
-            size: '1280*720', // Text-to-video uses size, not resolution
+            resolution: '720P',
             prompt_extend: true,
-            duration: options.duration || 5,
+            duration: options.duration || 3,
           },
         }),
       })
@@ -502,7 +502,7 @@ Respond with only the copywriting content.`,
 
       try {
         // Poll video-synthesis task status
-        const response = await fetch(`${ALIBABA_API_URL}/services/aigc/video-generation/video-synthesis/${taskId}`, {
+        const response = await fetch(`${ALIBABA_API_URL}/tasks/${taskId}`, {
           headers: {
             'Authorization': `Bearer ${apiKey}`,
           },
@@ -522,7 +522,7 @@ Respond with only the copywriting content.`,
               success: true,
               result: videoUrl,
               metadata: {
-                model: mode === 'image-to-video' ? 'wan2.1-i2v-plus' : 'wan2.1-t2v-turbo',
+                model: mode === 'image-to-video' ? 'wan2.1-i2v-plus' : 'wan2.1-t2v-plus',
                 provider: 'alibaba-wan',
                 mode,
                 taskId,
