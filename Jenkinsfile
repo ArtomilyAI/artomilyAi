@@ -36,7 +36,14 @@ pipeline {
             'ALIBABA_API_KEY',
             'STRIPE_SECRET_KEY',
             'STRIPE_WEBHOOK_SECRET',
-            'NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY'
+            'NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY',
+            'NEXT_PUBLIC_SUPABASE_URL',
+            'SUPABASE_STORAGE_ENDPOINT',
+            'SUPABASE_STORAGE_REGION',
+            'SUPABASE_STORAGE_ACCESS_KEY_ID',
+            'SUPABASE_STORAGE_SECRET_ACCESS_KEY',
+            'SUPABASE_STORAGE_IMAGE_BUCKET',
+            'SUPABASE_STORAGE_VIDEO_BUCKET'
           ]
 
           for (credId in credentialIds) {
