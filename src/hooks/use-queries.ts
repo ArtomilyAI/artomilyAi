@@ -144,7 +144,7 @@ export function useGenerate() {
     },
     onSuccess: () => {
       // Invalidate related queries after successful generation
-      queryClient.invalidateQueries({ queryKey: queryKeys.generations() })
+      queryClient.invalidateQueries({ queryKey: ['generations'] })
       queryClient.invalidateQueries({ queryKey: queryKeys.userWallet() })
     },
   })
@@ -187,8 +187,13 @@ export function useDeleteGeneration() {
       if (!res.ok) throw new Error('Failed to delete generation')
       return res.json()
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.generations() })
+    onSuccess: (_, id) => {
+      // Remove deleted item optimistically from all cached generations queries
+      queryClient.setQueriesData<{ generations: Generation[] }>(
+        { queryKey: ['generations'] },
+        (old) => old ? { ...old, generations: old.generations.filter((g) => g.id !== id) } : old
+      )
+      queryClient.invalidateQueries({ queryKey: ['generations'] })
     },
   })
 }
@@ -205,8 +210,15 @@ export function useToggleGenerationPublic() {
       if (!res.ok) throw new Error('Failed to toggle public')
       return res.json()
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.generations() })
+    onSuccess: (updated) => {
+      // Update the item in-place across all cached generations queries
+      queryClient.setQueriesData<{ generations: Generation[] }>(
+        { queryKey: ['generations'] },
+        (old) => old
+          ? { ...old, generations: old.generations.map((g) => g.id === updated.id ? { ...g, ...updated } : g) }
+          : old
+      )
+      queryClient.invalidateQueries({ queryKey: ['generations'] })
     },
   })
 }
