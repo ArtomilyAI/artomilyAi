@@ -3,6 +3,7 @@ import { GENERATION_QUEUE_NAME, GenerationJobData, GenerationJobResult } from '.
 import { REDIS_URL } from './redis'
 import { AIService } from '@/services/ai.service'
 import { GenerationService } from '@/services/generation.service'
+import { StorageService, StorageFileType } from '@/services/storage.service'
 import { GenerationStatus } from '@prisma/client'
 
 /**
@@ -79,11 +80,41 @@ async function processGenerationJob(
 
         // Handle result
         if (result.success && result.result) {
-            // Mark as completed
+            // Determine file type for storage (TEXT results are stored as-is)
+            const storageFileType: StorageFileType | null =
+                type === 'IMAGE' || type === 'UPSCALE'
+                    ? 'image'
+                    : type === 'VIDEO'
+                        ? 'video'
+                        : null
+
+            let finalResultUrl = result.result
+            let storageMetadata: Record<string, unknown> = {}
+
+            // Upload media results to Supabase Storage for permanent hosting
+            if (storageFileType) {
+                const upload = await StorageService.uploadFromUrl(
+                    result.result,
+                    storageFileType,
+                    generationId,
+                    userId
+                )
+                finalResultUrl = upload.url ?? result.result
+                storageMetadata = {
+                    storagePath: upload.storagePath,
+                    storageError: upload.error,
+                    storedInSupabase: upload.success && !!upload.storagePath,
+                }
+                if (!upload.success) {
+                    console.warn(`Storage upload failed for job ${job.id}: ${upload.error} — using original URL`)
+                }
+            }
+
+            // Mark as completed with the permanent (or fallback) URL
             await GenerationService.completeGeneration(
                 generationId,
-                result.result,
-                result.metadata
+                finalResultUrl,
+                { ...result.metadata, ...storageMetadata }
             )
 
             console.log(`Job ${job.id} completed successfully`)
@@ -91,8 +122,8 @@ async function processGenerationJob(
             return {
                 success: true,
                 generationId,
-                resultUrl: result.result,
-                metadata: result.metadata,
+                resultUrl: finalResultUrl,
+                metadata: { ...result.metadata, ...storageMetadata },
             }
         } else {
             // Generation failed - refund credits

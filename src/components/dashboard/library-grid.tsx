@@ -97,8 +97,8 @@ export function LibraryGrid({ generations, loading, onSelect }: LibraryGridProps
           </div>
 
           {gen.isPublic && (
-            <div className="absolute top-2 right-2">
-              <UsersRound className="size-6 text-blue-600" />
+            <div className="absolute top-4 right-4">
+              <UsersRound className="size-4 text-white" />
             </div>
           )}
 
