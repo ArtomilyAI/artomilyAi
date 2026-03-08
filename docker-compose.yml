@@ -8,9 +8,6 @@ services:
       target: runner
     container_name: artomily-app
     restart: unless-stopped
-    dns:
-      - 8.8.8.8
-      - 1.1.1.1
     environment:
       NODE_ENV: production
       DATABASE_URL: ${DATABASE_URL}
@@ -22,16 +19,13 @@ services:
       STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET}
       NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY}
       TZ: Asia/Jakarta
-
     ports:
-      - "3005:3000" # local debug tetap bisa
-
+      - "3005:3000"
     expose:
       - "3000"
     networks:
       - app_internal
       - traefik_proxy
-
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=traefik_proxy"
@@ -39,19 +33,16 @@ services:
       - "traefik.http.routers.buatinai.entrypoints=web"
       - "traefik.http.routers.buatinai.service=buatinai-svc"
       - "traefik.http.services.buatinai-svc.loadbalancer.server.port=3000"
+    depends_on:
+      - redis
 
-  # Worker for BullMQ Job Processing
   worker:
     build:
       context: .
       dockerfile: Dockerfile
       target: worker
-    deploy:
-      replicas: 2
+    container_name: artomily-worker
     restart: unless-stopped
-    dns:
-      - 8.8.8.8
-      - 1.1.1.1
     environment:
       NODE_ENV: production
       DATABASE_URL: ${DATABASE_URL}
@@ -65,12 +56,33 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
-    # optional: kalau worker butuh nunggu app/redis ready
     depends_on:
-      - app
+      - redis
+
+  redis:
+    image: redis:7-alpine
+    container_name: artomily-redis
+    restart: unless-stopped
+    command: >
+      redis-server
+      --appendonly yes
+    volumes:
+      - redis_data:/data
+    expose:
+      - "6379"
+    networks:
+      - app_internal
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
 
 networks:
   app_internal:
     driver: bridge
   traefik_proxy:
     external: true
+
+volumes:
+  redis_data:
