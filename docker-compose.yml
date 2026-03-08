@@ -1,4 +1,3 @@
-version: "3.9"
 
 services:
   app:
@@ -41,7 +40,7 @@ services:
       context: .
       dockerfile: Dockerfile
       target: worker
-    container_name: artomily-worker
+
     restart: unless-stopped
     environment:
       NODE_ENV: production
